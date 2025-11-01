@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { getTranslation, getStoredLanguage, type Language } from '../utils/i18n';
+import { getStoredTheme, applyTheme, watchSystemTheme } from '../utils/theme';
+import { getActiveTimerDurations, type TimerDurations } from '../utils/timerModes';
 
 type TimerState = 'idle' | 'running' | 'paused';
 type SessionType = 'work' | 'shortBreak' | 'longBreak';
-
-const WORK_TIME = 25 * 60; // 25 minutes
-const SHORT_BREAK = 5 * 60; // 5 minutes
-const LONG_BREAK = 15 * 60; // 15 minutes
 
 interface StoredTimerState {
   isRunning: boolean;
@@ -17,7 +15,7 @@ interface StoredTimerState {
 }
 
 function App() {
-  const [timeLeft, setTimeLeft] = useState(WORK_TIME);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [timerState, setTimerState] = useState<TimerState>('idle');
   const [sessionType, setSessionType] = useState<SessionType>('work');
   const [completedPomodoros, setCompletedPomodoros] = useState(0);
@@ -27,6 +25,17 @@ function App() {
   useEffect(() => {
     // Load language
     getStoredLanguage().then(setLanguage);
+    
+    // Load theme
+    getStoredTheme().then((theme) => {
+      applyTheme(theme);
+    });
+    
+    // Watch for system theme changes
+    const unwatch = watchSystemTheme(async () => {
+      const theme = await getStoredTheme();
+      applyTheme(theme);
+    });
     
     chrome.storage.local.get(['timerState'], (result) => {
       if (result.timerState) {
@@ -43,9 +52,16 @@ function App() {
           setTimeLeft(remaining);
           setTimerState('paused');
         } else {
-          setTimeLeft(getSessionDuration(state.sessionType));
-          setTimerState('idle');
+          getActiveTimerDurations().then((dur) => {
+            setTimeLeft(getSessionDuration(state.sessionType, dur));
+            setTimerState('idle');
+          });
         }
+      } else {
+        // Initialize with current durations
+        getActiveTimerDurations().then((dur) => {
+          setTimeLeft(dur.work * 60);
+        });
       }
     });
 
@@ -65,9 +81,26 @@ function App() {
           setTimeLeft(remaining);
           setTimerState('paused');
         } else {
-          setTimeLeft(getSessionDuration(newState.sessionType));
-          setTimerState('idle');
+          getActiveTimerDurations().then((dur) => {
+            setTimeLeft(getSessionDuration(newState.sessionType, dur));
+            setTimerState('idle');
+          });
         }
+      }
+      
+      // Reload durations when timer mode changes
+      if (changes.timerMode || changes.customDurations) {
+        // Timer will reload on next action
+      }
+      
+      // Reload theme when it changes
+      if (changes.theme) {
+        applyTheme(changes.theme.newValue);
+      }
+      
+      // Reload language when it changes
+      if (changes.language) {
+        setLanguage(changes.language.newValue);
       }
     };
 
@@ -75,6 +108,7 @@ function App() {
 
     return () => {
       chrome.storage.onChanged.removeListener(handleStorageChange);
+      unwatch();
     };
   }, []);
 
@@ -102,11 +136,11 @@ function App() {
     };
   }, [timerState]);
 
-  const getSessionDuration = (type: SessionType): number => {
+  const getSessionDuration = (type: SessionType, dur: TimerDurations): number => {
     switch (type) {
-      case 'work': return WORK_TIME;
-      case 'shortBreak': return SHORT_BREAK;
-      case 'longBreak': return LONG_BREAK;
+      case 'work': return dur.work * 60;
+      case 'shortBreak': return dur.shortBreak * 60;
+      case 'longBreak': return dur.longBreak * 60;
     }
   };
 
@@ -117,8 +151,10 @@ function App() {
         const state = result.timerState as StoredTimerState;
         setSessionType(state.sessionType);
         setCompletedPomodoros(state.completedPomodoros);
-        setTimeLeft(getSessionDuration(state.sessionType));
-        setTimerState('idle');
+        getActiveTimerDurations().then((dur) => {
+          setTimeLeft(getSessionDuration(state.sessionType, dur));
+          setTimerState('idle');
+        });
       }
     });
   };
@@ -156,19 +192,23 @@ function App() {
   };
 
   const handleReset = () => {
-    chrome.storage.local.set({
-      timerState: {
-        isRunning: false,
-        isPaused: false,
-        endTime: null,
-        sessionType: 'work',
-        completedPomodoros: completedPomodoros,
-      }
+    getActiveTimerDurations().then((dur) => {
+      const workDuration = dur.work * 60;
+      
+      chrome.storage.local.set({
+        timerState: {
+          isRunning: false,
+          isPaused: false,
+          endTime: null,
+          sessionType: 'work',
+          completedPomodoros: completedPomodoros,
+        }
+      });
+      
+      setTimerState('idle');
+      setSessionType('work');
+      setTimeLeft(workDuration);
     });
-    
-    setTimerState('idle');
-    setSessionType('work');
-    setTimeLeft(WORK_TIME);
   };
 
   const formatTime = (seconds: number): string => {
@@ -210,7 +250,19 @@ function App() {
   return (
     <div className="app" style={{ borderTopColor: getSessionColor() }}>
       <header className="header">
-        <h1 className="title">{getTranslation('app.title', language)} 🍅</h1>
+        <div className="header-top">
+          <h1 className="title">
+            <img src="/icons/icon32.png" alt="LaTomate" className="title-icon" />
+            {getTranslation('app.title', language)}
+          </h1>
+          <button 
+            className="settings-btn" 
+            onClick={() => chrome.runtime.openOptionsPage()}
+            title="Settings"
+          >
+            ⚙️
+          </button>
+        </div>
         <p className="session-type">{getSessionLabel()}</p>
       </header>
 
