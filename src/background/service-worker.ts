@@ -1,6 +1,8 @@
 // Background service worker for LaTomate
 // Handles alarms, notifications, and background tasks
 
+import { getActiveTimerDurations } from '../utils/timerModes';
+
 interface TimerState {
   isRunning: boolean;
   isPaused: boolean;
@@ -23,14 +25,7 @@ chrome.runtime.onInstalled.addListener(() => {
       sessionType: 'work',
       completedPomodoros: 0,
     },
-    settings: {
-      workDuration: 25,
-      shortBreakDuration: 5,
-      longBreakDuration: 15,
-      pomodorosUntilLongBreak: 4,
-      notificationsEnabled: true,
-      soundEnabled: true,
-    },
+    notificationsEnabled: true,
   });
 });
 
@@ -71,17 +66,25 @@ function updateBadge() {
 }
 
 // Handle timer completion
-function handleTimerComplete(state: TimerState) {
+async function handleTimerComplete(state: TimerState) {
   const isWorkSession = state.sessionType === 'work';
   
   console.log('⏰ Timer completed! Session type:', state.sessionType);
   
-  // Play notification sound
-  playNotificationSound();
+  // Check if notifications are enabled
+  const result = await chrome.storage.local.get(['notificationsEnabled']);
+  const notificationsEnabled = result.notificationsEnabled ?? true;
+  
+  if (!notificationsEnabled) {
+    console.log('🔕 Notifications disabled, skipping');
+  }
+  
+  // Get timer durations to check long break interval
+  const durations = await getActiveTimerDurations();
   
   if (isWorkSession) {
     const newCount = state.completedPomodoros + 1;
-    const nextSession = newCount % 4 === 0 ? 'longBreak' : 'shortBreak';
+    const nextSession = newCount % durations.longBreakInterval === 0 ? 'longBreak' : 'shortBreak';
     
     chrome.storage.local.set({
       timerState: {
@@ -94,21 +97,23 @@ function handleTimerComplete(state: TimerState) {
       completedPomodoros: newCount,
     });
     
-    console.log('🔔 Creating work complete notification...');
-    chrome.notifications.create('pomodoro-complete-' + Date.now(), {
-      type: 'basic',
-      iconUrl: chrome.runtime.getURL('icons/icon128.png'),
-      title: 'LaTomate 🍅 - Work Session Complete!',
-      message: 'Great job! Time for a break. Click to continue.',
-      priority: 2,
-      requireInteraction: false,
-    }, (notificationId) => {
-      if (chrome.runtime.lastError) {
-        console.error('❌ Notification error:', chrome.runtime.lastError);
-      } else {
-        console.log('✅ Notification created:', notificationId);
-      }
-    });
+    if (notificationsEnabled) {
+      console.log('🔔 Creating work complete notification...');
+      chrome.notifications.create('pomodoro-complete-' + Date.now(), {
+        type: 'basic',
+        iconUrl: chrome.runtime.getURL('icons/icon128.png'),
+        title: 'LaTomate 🍅 - Work Session Complete!',
+        message: 'Great job! Time for a break. Click to continue.',
+        priority: 2,
+        requireInteraction: false,
+      }, (notificationId) => {
+        if (chrome.runtime.lastError) {
+          console.error('❌ Notification error:', chrome.runtime.lastError);
+        } else {
+          console.log('✅ Notification created:', notificationId);
+        }
+      });
+    }
   } else {
     chrome.storage.local.set({
       timerState: {
@@ -120,35 +125,24 @@ function handleTimerComplete(state: TimerState) {
       },
     });
     
-    console.log('🔔 Creating break complete notification...');
-    chrome.notifications.create('break-complete-' + Date.now(), {
-      type: 'basic',
-      iconUrl: chrome.runtime.getURL('icons/icon128.png'),
-      title: 'LaTomate 🍅 - Break Complete!',
-      message: 'Refreshed and ready? Click to start a new session.',
-      priority: 2,
-      requireInteraction: false,
-    }, (notificationId) => {
-      if (chrome.runtime.lastError) {
-        console.error('❌ Notification error:', chrome.runtime.lastError);
-      } else {
-        console.log('✅ Notification created:', notificationId);
-      }
-    });
-  }
-}
-
-// Play notification sound
-function playNotificationSound() {
-  // Create an audio element to play the sound
-  // Note: In service workers, we can't directly play audio,
-  // but we can send a message to any open tabs or use the notification API
-  chrome.storage.local.get(['settings'], (result) => {
-    if (result.settings && result.settings.soundEnabled !== false) {
-      // Use the browser's notification sound
-      console.log('🔔 Timer completed!');
+    if (notificationsEnabled) {
+      console.log('🔔 Creating break complete notification...');
+      chrome.notifications.create('break-complete-' + Date.now(), {
+        type: 'basic',
+        iconUrl: chrome.runtime.getURL('icons/icon128.png'),
+        title: 'LaTomate 🍅 - Break Complete!',
+        message: 'Refreshed and ready? Click to start a new session.',
+        priority: 2,
+        requireInteraction: false,
+      }, (notificationId) => {
+        if (chrome.runtime.lastError) {
+          console.error('❌ Notification error:', chrome.runtime.lastError);
+        } else {
+          console.log('✅ Notification created:', notificationId);
+        }
+      });
     }
-  });
+  }
 }
 
 // Update badge every second when timer is running
