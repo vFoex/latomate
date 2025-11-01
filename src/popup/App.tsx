@@ -1,0 +1,267 @@
+import { useState, useEffect } from 'react';
+import { getTranslation, getStoredLanguage, type Language } from '../utils/i18n';
+
+type TimerState = 'idle' | 'running' | 'paused';
+type SessionType = 'work' | 'shortBreak' | 'longBreak';
+
+const WORK_TIME = 25 * 60; // 25 minutes
+const SHORT_BREAK = 5 * 60; // 5 minutes
+const LONG_BREAK = 15 * 60; // 15 minutes
+
+interface StoredTimerState {
+  isRunning: boolean;
+  isPaused: boolean;
+  endTime: number | null;
+  sessionType: SessionType;
+  completedPomodoros: number;
+}
+
+function App() {
+  const [timeLeft, setTimeLeft] = useState(WORK_TIME);
+  const [timerState, setTimerState] = useState<TimerState>('idle');
+  const [sessionType, setSessionType] = useState<SessionType>('work');
+  const [completedPomodoros, setCompletedPomodoros] = useState(0);
+  const [language, setLanguage] = useState<Language>('en');
+
+  // Load state from storage on mount
+  useEffect(() => {
+    // Load language
+    getStoredLanguage().then(setLanguage);
+    
+    chrome.storage.local.get(['timerState'], (result) => {
+      if (result.timerState) {
+        const state = result.timerState as StoredTimerState;
+        setSessionType(state.sessionType);
+        setCompletedPomodoros(state.completedPomodoros);
+        
+        if (state.isRunning && state.endTime) {
+          const remaining = Math.max(0, Math.ceil((state.endTime - Date.now()) / 1000));
+          setTimeLeft(remaining);
+          setTimerState('running');
+        } else if (state.isPaused && state.endTime) {
+          const remaining = Math.max(0, Math.ceil((state.endTime - Date.now()) / 1000));
+          setTimeLeft(remaining);
+          setTimerState('paused');
+        } else {
+          setTimeLeft(getSessionDuration(state.sessionType));
+          setTimerState('idle');
+        }
+      }
+    });
+
+    // Listen for storage changes to sync state across popup opens/closes
+    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+      if (changes.timerState) {
+        const newState = changes.timerState.newValue as StoredTimerState;
+        setSessionType(newState.sessionType);
+        setCompletedPomodoros(newState.completedPomodoros);
+        
+        if (newState.isRunning && newState.endTime) {
+          const remaining = Math.max(0, Math.ceil((newState.endTime - Date.now()) / 1000));
+          setTimeLeft(remaining);
+          setTimerState('running');
+        } else if (newState.isPaused && newState.endTime) {
+          const remaining = Math.max(0, Math.ceil((newState.endTime - Date.now()) / 1000));
+          setTimeLeft(remaining);
+          setTimerState('paused');
+        } else {
+          setTimeLeft(getSessionDuration(newState.sessionType));
+          setTimerState('idle');
+        }
+      }
+    };
+
+    chrome.storage.onChanged.addListener(handleStorageChange);
+
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+    };
+  }, []);
+
+  // Update timeLeft every second when running
+  useEffect(() => {
+    let interval: number | undefined;
+
+    if (timerState === 'running') {
+      interval = window.setInterval(() => {
+        chrome.storage.local.get(['timerState'], (result) => {
+          if (result.timerState && result.timerState.endTime) {
+            const remaining = Math.max(0, Math.ceil((result.timerState.endTime - Date.now()) / 1000));
+            setTimeLeft(remaining);
+            
+            if (remaining === 0) {
+              handleSessionComplete();
+            }
+          }
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [timerState]);
+
+  const getSessionDuration = (type: SessionType): number => {
+    switch (type) {
+      case 'work': return WORK_TIME;
+      case 'shortBreak': return SHORT_BREAK;
+      case 'longBreak': return LONG_BREAK;
+    }
+  };
+
+  const handleSessionComplete = () => {
+    // Session completion is now handled by the background worker
+    chrome.storage.local.get(['timerState'], (result) => {
+      if (result.timerState) {
+        const state = result.timerState as StoredTimerState;
+        setSessionType(state.sessionType);
+        setCompletedPomodoros(state.completedPomodoros);
+        setTimeLeft(getSessionDuration(state.sessionType));
+        setTimerState('idle');
+      }
+    });
+  };
+
+  const handleStart = () => {
+    const endTime = Date.now() + (timeLeft * 1000);
+    
+    chrome.storage.local.set({
+      timerState: {
+        isRunning: true,
+        isPaused: false,
+        endTime: endTime,
+        sessionType: sessionType,
+        completedPomodoros: completedPomodoros,
+      }
+    });
+    
+    setTimerState('running');
+  };
+
+  const handlePause = () => {
+    chrome.storage.local.get(['timerState'], (result) => {
+      if (result.timerState) {
+        chrome.storage.local.set({
+          timerState: {
+            ...result.timerState,
+            isRunning: false,
+            isPaused: true,
+          }
+        });
+      }
+    });
+    
+    setTimerState('paused');
+  };
+
+  const handleReset = () => {
+    chrome.storage.local.set({
+      timerState: {
+        isRunning: false,
+        isPaused: false,
+        endTime: null,
+        sessionType: 'work',
+        completedPomodoros: completedPomodoros,
+      }
+    });
+    
+    setTimerState('idle');
+    setSessionType('work');
+    setTimeLeft(WORK_TIME);
+  };
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getSessionLabel = (): string => {
+    switch (sessionType) {
+      case 'work':
+        return getTranslation('session.work', language);
+      case 'shortBreak':
+        return getTranslation('session.shortBreak', language);
+      case 'longBreak':
+        return getTranslation('session.longBreak', language);
+    }
+  };
+
+  const getSessionColor = (): string => {
+    switch (sessionType) {
+      case 'work':
+        return '#e74c3c'; // Tomato red
+      case 'shortBreak':
+        return '#3498db'; // Blue
+      case 'longBreak':
+        return '#2ecc71'; // Green
+    }
+  };
+
+  const getButtonColor = (): string => {
+    // Use session color for start button when not in work mode
+    if (timerState === 'idle' || timerState === 'paused') {
+      return getSessionColor();
+    }
+    return '#f39c12'; // Orange for pause
+  };
+
+  return (
+    <div className="app" style={{ borderTopColor: getSessionColor() }}>
+      <header className="header">
+        <h1 className="title">{getTranslation('app.title', language)} 🍅</h1>
+        <p className="session-type">{getSessionLabel()}</p>
+      </header>
+
+      <main className="main">
+        <div className="timer-display" style={{ color: getSessionColor() }}>
+          {formatTime(timeLeft)}
+        </div>
+
+        <div className="pomodoro-count">
+          <span className="count-label">{getTranslation('stats.completedPomodoros', language)}:</span>
+          <span className="count-value">{completedPomodoros}</span>
+        </div>
+
+        <div className="controls">
+          {timerState === 'idle' || timerState === 'paused' ? (
+            <button 
+              className="btn btn-start" 
+              onClick={handleStart}
+              style={{ backgroundColor: getButtonColor() }}
+            >
+              {timerState === 'idle' 
+                ? getTranslation('button.start', language)
+                : getTranslation('button.resume', language)
+              }
+            </button>
+          ) : (
+            <button className="btn btn-pause" onClick={handlePause}>
+              {getTranslation('button.pause', language)}
+            </button>
+          )}
+          <button className="btn btn-reset" onClick={handleReset}>
+            {getTranslation('button.reset', language)}
+          </button>
+        </div>
+
+        <div className="progress-dots">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className={`dot ${i < (completedPomodoros % 4) ? 'completed' : ''}`}
+              style={{ backgroundColor: i < (completedPomodoros % 4) ? getSessionColor() : undefined }}
+            />
+          ))}
+        </div>
+      </main>
+
+      <footer className="footer">
+        <p className="tagline">{getTranslation('app.madeBy', language)} <a href="https://github.com/vFoex" target="_blank" rel="noopener noreferrer">vFoex</a></p>
+      </footer>
+    </div>
+  );
+}
+
+export default App;
