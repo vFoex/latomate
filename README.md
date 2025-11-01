@@ -89,9 +89,6 @@ Contributions are welcome! Here's how to participate:
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📝 Roadmap
-
-Check [TODO.md](../TODO.md) for the complete project roadmap.
 
 ### Next Steps
 - [ ] Deploy to Chrome Web Store
@@ -112,8 +109,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📬 Contact
 
 - GitHub: [@vFoex](https://github.com/vFoex)
-- LinkedIn: [Your Profile](https://linkedin.com/in/your-profile)
-- Medium: [@your-medium](https://medium.com/@your-medium)
+- LinkedIn: [Your Profile](https://www.linkedin.com/in/valentin-foex)
 
 ---
 
