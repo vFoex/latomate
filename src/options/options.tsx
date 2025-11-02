@@ -7,27 +7,61 @@ import './options.css';
 
 type Tab = 'general' | 'timer' | 'theme';
 
+interface Settings {
+  language: Language;
+  theme: Theme;
+  timerMode: TimerMode;
+  customDurations: TimerDurations;
+  notificationsEnabled: boolean;
+}
+
 function OptionsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('general');
-  const [language, setLanguage] = useState<Language>('en');
-  const [theme, setTheme] = useState<Theme>('auto');
-  const [timerMode, setTimerMode] = useState<TimerMode>('pomodoro');
-  const [customDurations, setCustomDurations] = useState<TimerDurations>(TIMER_PRESETS.custom);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [saveStatus, setSaveStatus] = useState<string>('');
+  
+  // Current saved settings
+  const [savedSettings, setSavedSettings] = useState<Settings>({
+    language: 'en',
+    theme: 'auto',
+    timerMode: 'pomodoro',
+    customDurations: TIMER_PRESETS.custom,
+    notificationsEnabled: true,
+  });
+  
+  // Pending changes (draft)
+  const [draftSettings, setDraftSettings] = useState<Settings>({
+    language: 'en',
+    theme: 'auto',
+    timerMode: 'pomodoro',
+    customDurations: TIMER_PRESETS.custom,
+    notificationsEnabled: true,
+  });
+  
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     loadSettings();
     
     // Watch for system theme changes when in auto mode
     const unwatch = watchSystemTheme(() => {
-      if (theme === 'auto') {
+      if (savedSettings.theme === 'auto') {
         applyTheme('auto');
       }
     });
     
     return unwatch;
-  }, [theme]);
+  }, [savedSettings.theme]);
+
+  // Check if there are pending changes (excluding theme)
+  useEffect(() => {
+    const savedWithoutTheme = { ...savedSettings };
+    const draftWithoutTheme = { ...draftSettings };
+    delete (savedWithoutTheme as any).theme;
+    delete (draftWithoutTheme as any).theme;
+    
+    const changed = JSON.stringify(savedWithoutTheme) !== JSON.stringify(draftWithoutTheme);
+    setHasChanges(changed);
+  }, [savedSettings, draftSettings]);
 
   async function loadSettings() {
     const [lang, themeValue, mode, customDur, notifEnabled] = await Promise.all([
@@ -38,11 +72,16 @@ function OptionsPage() {
       getNotificationsEnabled(),
     ]);
     
-    setLanguage(lang);
-    setTheme(themeValue);
-    setTimerMode(mode);
-    setCustomDurations(customDur);
-    setNotificationsEnabled(notifEnabled);
+    const loadedSettings: Settings = {
+      language: lang,
+      theme: themeValue,
+      timerMode: mode,
+      customDurations: customDur,
+      notificationsEnabled: notifEnabled,
+    };
+    
+    setSavedSettings(loadedSettings);
+    setDraftSettings(loadedSettings);
     applyTheme(themeValue);
   }
 
@@ -62,43 +101,63 @@ function OptionsPage() {
     });
   }
 
-  const t = (key: string) => getTranslation(key, language);
+  const t = (key: string) => getTranslation(key, draftSettings.language);
 
-  async function handleLanguageChange(newLang: Language) {
-    setLanguage(newLang);
-    await setStoredLanguage(newLang);
-    showSaveStatus();
+  // Draft change handlers (don't save immediately)
+  function handleLanguageChange(newLang: Language) {
+    setDraftSettings({ ...draftSettings, language: newLang });
   }
 
   async function handleThemeChange(newTheme: Theme) {
-    setTheme(newTheme);
+    // Theme changes are applied and saved immediately
+    setDraftSettings({ ...draftSettings, theme: newTheme });
+    setSavedSettings({ ...savedSettings, theme: newTheme });
     await setStoredTheme(newTheme);
     applyTheme(newTheme);
-    showSaveStatus();
   }
 
-  async function handleTimerModeChange(newMode: TimerMode) {
-    setTimerMode(newMode);
-    await setStoredTimerMode(newMode);
-    showSaveStatus();
+  function handleTimerModeChange(newMode: TimerMode) {
+    setDraftSettings({ ...draftSettings, timerMode: newMode });
   }
 
-  async function handleCustomDurationChange(field: keyof TimerDurations, value: number) {
-    const newDurations = { ...customDurations, [field]: value };
-    setCustomDurations(newDurations);
-    await setStoredCustomDurations(newDurations);
-    showSaveStatus();
+  function handleCustomDurationChange(field: keyof TimerDurations, value: number) {
+    const newDurations = { ...draftSettings.customDurations, [field]: value };
+    setDraftSettings({ ...draftSettings, customDurations: newDurations });
   }
 
-  async function handleNotificationsToggle(enabled: boolean) {
-    setNotificationsEnabled(enabled);
-    await setNotificationsEnabledStorage(enabled);
-    showSaveStatus();
+  function handleNotificationsToggle(enabled: boolean) {
+    setDraftSettings({ ...draftSettings, notificationsEnabled: enabled });
   }
 
-  function showSaveStatus() {
-    setSaveStatus(t('common.saved'));
-    setTimeout(() => setSaveStatus(''), 2000);
+  // Save all changes at once (excluding theme which is auto-saved)
+  async function handleSave() {
+    setSaveStatus('saving');
+    
+    try {
+      await Promise.all([
+        setStoredLanguage(draftSettings.language),
+        // Theme already saved immediately, no need to save again
+        setStoredTimerMode(draftSettings.timerMode),
+        setStoredCustomDurations(draftSettings.customDurations),
+        setNotificationsEnabledStorage(draftSettings.notificationsEnabled),
+      ]);
+      
+      setSavedSettings(draftSettings);
+      setSaveStatus('saved');
+      
+      setTimeout(() => {
+        setSaveStatus('idle');
+      }, 2000);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      setSaveStatus('idle');
+    }
+  }
+
+  // Cancel changes and revert to saved
+  function handleCancel() {
+    setDraftSettings(savedSettings);
+    applyTheme(savedSettings.theme);
   }
 
   return (
@@ -108,7 +167,6 @@ function OptionsPage() {
           <img src="/icons/icon48.png" alt="LaTomate" className="header-icon" />
           {t('options.title')}
         </h1>
-        {saveStatus && <span className="save-status">{saveStatus}</span>}
       </header>
 
       <div className="options-content">
@@ -145,7 +203,7 @@ function OptionsPage() {
                     <span className="setting-description">{t('general.language.description')}</span>
                   </div>
                   <select 
-                    value={language} 
+                    value={draftSettings.language} 
                     onChange={(e) => handleLanguageChange(e.target.value as Language)}
                     className="select-input"
                   >
@@ -163,7 +221,7 @@ function OptionsPage() {
                   </div>
                   <input
                     type="checkbox"
-                    checked={notificationsEnabled}
+                    checked={draftSettings.notificationsEnabled}
                     onChange={(e) => handleNotificationsToggle(e.target.checked)}
                     className="toggle-input"
                   />
@@ -178,12 +236,12 @@ function OptionsPage() {
               <p className="section-description">{t('timer.mode.description')}</p>
               
               <div className="timer-modes">
-                <label className={`mode-card ${timerMode === 'pomodoro' ? 'selected' : ''}`}>
+                <label className={`mode-card ${draftSettings.timerMode === 'pomodoro' ? 'selected' : ''}`}>
                   <input
                     type="radio"
                     name="timerMode"
                     value="pomodoro"
-                    checked={timerMode === 'pomodoro'}
+                    checked={draftSettings.timerMode === 'pomodoro'}
                     onChange={() => handleTimerModeChange('pomodoro')}
                   />
                   <div className="mode-content">
@@ -192,12 +250,12 @@ function OptionsPage() {
                   </div>
                 </label>
 
-                <label className={`mode-card ${timerMode === 'intensive' ? 'selected' : ''}`}>
+                <label className={`mode-card ${draftSettings.timerMode === 'intensive' ? 'selected' : ''}`}>
                   <input
                     type="radio"
                     name="timerMode"
                     value="intensive"
-                    checked={timerMode === 'intensive'}
+                    checked={draftSettings.timerMode === 'intensive'}
                     onChange={() => handleTimerModeChange('intensive')}
                   />
                   <div className="mode-content">
@@ -206,12 +264,12 @@ function OptionsPage() {
                   </div>
                 </label>
 
-                <label className={`mode-card ${timerMode === '52-17' ? 'selected' : ''}`}>
+                <label className={`mode-card ${draftSettings.timerMode === '52-17' ? 'selected' : ''}`}>
                   <input
                     type="radio"
                     name="timerMode"
                     value="52-17"
-                    checked={timerMode === '52-17'}
+                    checked={draftSettings.timerMode === '52-17'}
                     onChange={() => handleTimerModeChange('52-17')}
                   />
                   <div className="mode-content">
@@ -220,12 +278,12 @@ function OptionsPage() {
                   </div>
                 </label>
 
-                <label className={`mode-card ${timerMode === 'custom' ? 'selected' : ''}`}>
+                <label className={`mode-card ${draftSettings.timerMode === 'custom' ? 'selected' : ''}`}>
                   <input
                     type="radio"
                     name="timerMode"
                     value="custom"
-                    checked={timerMode === 'custom'}
+                    checked={draftSettings.timerMode === 'custom'}
                     onChange={() => handleTimerModeChange('custom')}
                   />
                   <div className="mode-content">
@@ -235,7 +293,7 @@ function OptionsPage() {
                 </label>
               </div>
 
-              {timerMode === 'custom' && (
+              {draftSettings.timerMode === 'custom' && (
                 <div className="custom-durations">
                   <h3>{t('timer.mode.custom')}</h3>
                   <div className="duration-inputs">
@@ -245,7 +303,7 @@ function OptionsPage() {
                         type="number"
                         min="1"
                         max="120"
-                        value={customDurations.work}
+                        value={draftSettings.customDurations.work}
                         onChange={(e) => handleCustomDurationChange('work', parseInt(e.target.value) || 1)}
                         className="number-input"
                       />
@@ -256,7 +314,7 @@ function OptionsPage() {
                         type="number"
                         min="1"
                         max="60"
-                        value={customDurations.shortBreak}
+                        value={draftSettings.customDurations.shortBreak}
                         onChange={(e) => handleCustomDurationChange('shortBreak', parseInt(e.target.value) || 1)}
                         className="number-input"
                       />
@@ -267,7 +325,7 @@ function OptionsPage() {
                         type="number"
                         min="1"
                         max="60"
-                        value={customDurations.longBreak}
+                        value={draftSettings.customDurations.longBreak}
                         onChange={(e) => handleCustomDurationChange('longBreak', parseInt(e.target.value) || 1)}
                         className="number-input"
                       />
@@ -278,7 +336,7 @@ function OptionsPage() {
                         type="number"
                         min="1"
                         max="10"
-                        value={customDurations.longBreakInterval}
+                        value={draftSettings.customDurations.longBreakInterval}
                         onChange={(e) => handleCustomDurationChange('longBreakInterval', parseInt(e.target.value) || 1)}
                         className="number-input"
                       />
@@ -295,12 +353,12 @@ function OptionsPage() {
               <p className="section-description">{t('theme.mode.description')}</p>
               
               <div className="theme-options">
-                <label className={`theme-card ${theme === 'light' ? 'selected' : ''}`}>
+                <label className={`theme-card ${draftSettings.theme === 'light' ? 'selected' : ''}`}>
                   <input
                     type="radio"
                     name="theme"
                     value="light"
-                    checked={theme === 'light'}
+                    checked={draftSettings.theme === 'light'}
                     onChange={() => handleThemeChange('light')}
                   />
                   <div className="theme-preview light-preview">
@@ -310,12 +368,12 @@ function OptionsPage() {
                   <strong>{t('theme.light')}</strong>
                 </label>
 
-                <label className={`theme-card ${theme === 'dark' ? 'selected' : ''}`}>
+                <label className={`theme-card ${draftSettings.theme === 'dark' ? 'selected' : ''}`}>
                   <input
                     type="radio"
                     name="theme"
                     value="dark"
-                    checked={theme === 'dark'}
+                    checked={draftSettings.theme === 'dark'}
                     onChange={() => handleThemeChange('dark')}
                   />
                   <div className="theme-preview dark-preview">
@@ -325,12 +383,12 @@ function OptionsPage() {
                   <strong>{t('theme.dark')}</strong>
                 </label>
 
-                <label className={`theme-card ${theme === 'auto' ? 'selected' : ''}`}>
+                <label className={`theme-card ${draftSettings.theme === 'auto' ? 'selected' : ''}`}>
                   <input
                     type="radio"
                     name="theme"
                     value="auto"
-                    checked={theme === 'auto'}
+                    checked={draftSettings.theme === 'auto'}
                     onChange={() => handleThemeChange('auto')}
                   />
                   <div className="theme-preview auto-preview">
@@ -354,6 +412,37 @@ function OptionsPage() {
           LaTomate v0.2.0 • {t('app.madeBy')} <a href="https://github.com/vFoex" target="_blank" rel="noopener noreferrer">vFoex</a>
         </p>
       </footer>
+
+      {/* Save Portal - appears when there are unsaved changes */}
+      {hasChanges && (
+        <div className="save-portal">
+          <div className="save-portal-content">
+            {saveStatus === 'saved' ? (
+              <div className="save-success">
+                <span className="success-icon">✓</span>
+                <span>{t('common.saved')}</span>
+              </div>
+            ) : (
+              <div className="save-portal-actions">
+                <button 
+                  className="btn-cancel" 
+                  onClick={handleCancel}
+                  disabled={saveStatus === 'saving'}
+                >
+                  {t('common.cancel')}
+                </button>
+                <button 
+                  className="btn-save" 
+                  onClick={handleSave}
+                  disabled={saveStatus === 'saving'}
+                >
+                  {saveStatus === 'saving' ? 'Saving...' : t('common.save')}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

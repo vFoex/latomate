@@ -510,6 +510,120 @@ body {
   text-decoration: underline;
 }
 
+/* Save Portal */
+.save-portal {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border-top: 2px solid var(--color-primary);
+  box-shadow: 0 -4px 12px var(--shadow-color-strong);
+  z-index: 1000;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.save-portal-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.save-portal-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-cancel,
+.btn-save {
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-cancel {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: var(--bg-gradient-start);
+  border-color: var(--text-secondary);
+}
+
+.btn-save {
+  background: var(--color-primary);
+  color: white;
+  min-width: 120px;
+  box-shadow: 0 2px 4px rgba(231, 76, 60, 0.2);
+}
+
+.btn-save:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+}
+
+.btn-cancel:disabled,
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.save-success {
+  color: var(--color-break);
+  font-weight: 600;
+  font-size: 1.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+.success-icon {
+  font-size: 1.5rem;
+  background: var(--color-break);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .options-content {
