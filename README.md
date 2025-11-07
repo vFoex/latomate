@@ -2,7 +2,7 @@
 
 > An elegant and powerful Chrome Pomodoro extension to improve your focus and productivity
 
-![Version](https://img.shields.io/badge/version-0.1.0-red.svg)
+![Version](https://img.shields.io/badge/version-0.2.0-red.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
@@ -13,15 +13,15 @@ LaTomate is a modern Chrome extension that implements the Pomodoro Technique to 
 
 ### ✨ Features
 
-#### Current Version (v0.1.0) - MVP
+#### Current Version (v0.2.0) - MVP
 - ⏱️ Classic Pomodoro timer (25/5/15)
 - ⏸️ Start/Pause/Reset controls
 - 🔔 End-of-session notifications
 - 🎨 Elegant and minimalist interface
 - 🌍 Multi-language support (English/French)
+- 🔄 Multiple modes (45/15, 52/17, custom)
 
 #### Coming Soon
-- 🔄 Multiple modes (45/15, 52/17, custom)
 - 🎵 Ambient sounds (rain, café, nature)
 - 📊 Activity tracking and statistics
 - 📝 Note-taking during sessions
@@ -32,7 +32,7 @@ LaTomate is a modern Chrome extension that implements the Pomodoro Technique to 
 
 ### For Users
 
-1. Download the latest version from the [Chrome Web Store](#) (coming soon)
+1. Download the latest version from the [Chrome Web Store](https://chromewebstore.google.com/detail/latomate/cjfogkmednfbmgdgnpikdajnkmbpdegl)
 2. Click on the LaTomate icon in your toolbar
 3. Start your first focus session! 🍅
 
@@ -77,7 +77,7 @@ npm run build
 
 ## 🎨 Screenshots
 
-_Coming soon_
+![Screenshot](https://lh3.googleusercontent.com/AN8hGhPxgo_gP74Mx10u2LoqWvlx8jSvvZjGbavn15AsjAUCbPX4cgA-kLtQJHuAzYp-uLcxEqWYW-noOJmvl89SeEs=s1600-w1600-h1000)
 
 ## 🤝 Contributing
 
@@ -88,13 +88,6 @@ Contributions are welcome! Here's how to participate:
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
-
-### Next Steps
-- [ ] Deploy to Chrome Web Store
-- [ ] Multiple Pomodoro modes
-- [ ] Ambient sounds
-- [ ] Activity tracking and statistics
 
 ## 📄 License
 
@@ -110,7 +103,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - GitHub: [@vFoex](https://github.com/vFoex)
 - LinkedIn: [Valentin Foex](https://www.linkedin.com/in/valentin-foex)
-
----
-
-Made with ❤️ and lots of 🍅 in France
