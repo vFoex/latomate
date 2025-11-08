@@ -1,39 +1,14 @@
 // Type definitions for LaTomate
+// Central export file for all types
 
-export type TimerState = 'idle' | 'running' | 'paused';
+// Timer types
+export type { TimerState, SessionType, TimerMode } from './timer';
 
-export type SessionType = 'work' | 'shortBreak' | 'longBreak';
+// Session types
+export type { SessionRecord, SessionStats } from './session';
 
-export interface PomodoroSettings {
-  workDuration: number; // in minutes
-  shortBreakDuration: number;
-  longBreakDuration: number;
-  pomodorosUntilLongBreak: number;
-  notificationsEnabled: boolean;
-  soundEnabled: boolean;
-}
+// Settings types
+export type { PomodoroSettings } from './settings';
 
-export interface SessionStats {
-  completedPomodoros: number;
-  totalFocusTime: number; // in minutes
-  lastSessionDate?: string;
-  currentStreak?: number;
-}
-
-export interface StorageData {
-  completedPomodoros: number;
-  totalFocusTime: number;
-  settings: PomodoroSettings;
-  sessions?: SessionRecord[];
-}
-
-export interface SessionRecord {
-  id: string;
-  type: SessionType;
-  startTime: string;
-  endTime: string;
-  duration: number; // in seconds
-  completed: boolean;
-  interrupted: boolean;
-  notes?: string;
-}
+// Storage types
+export type { StorageData } from './storage';

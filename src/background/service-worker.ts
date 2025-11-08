@@ -1,7 +1,9 @@
 // Background service worker for LaTomate
 // Handles alarms, notifications, and background tasks
 
-import { getActiveTimerDurations } from '../utils/timerModes';
+import { getActiveTimerDurations, getStoredTimerMode } from '../utils/timerModes';
+import { generateSessionId, saveSession, updateSession } from '../utils/storage';
+import type { SessionRecord } from '../types';
 
 interface TimerState {
   isRunning: boolean;
@@ -9,6 +11,7 @@ interface TimerState {
   endTime: number | null;
   sessionType: 'work' | 'shortBreak' | 'longBreak';
   completedPomodoros: number;
+  currentSessionId?: string; // Track current session being recorded
 }
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -71,6 +74,16 @@ async function handleTimerComplete(state: TimerState) {
   
   console.log('⏰ Timer completed! Session type:', state.sessionType);
   
+  // Complete the current session record
+  if (state.currentSessionId) {
+    await updateSession(state.currentSessionId, {
+      endTime: new Date().toISOString(),
+      completed: true,
+      interrupted: false,
+    });
+    console.log('✅ Session completed and recorded:', state.currentSessionId);
+  }
+  
   // Check if notifications are enabled
   const result = await chrome.storage.local.get(['notificationsEnabled']);
   const notificationsEnabled = result.notificationsEnabled ?? true;
@@ -93,6 +106,7 @@ async function handleTimerComplete(state: TimerState) {
         endTime: null,
         sessionType: nextSession,
         completedPomodoros: newCount,
+        currentSessionId: undefined, // Clear current session
       },
       completedPomodoros: newCount,
     });
@@ -122,6 +136,7 @@ async function handleTimerComplete(state: TimerState) {
         endTime: null,
         sessionType: 'work',
         completedPomodoros: state.completedPomodoros,
+        currentSessionId: undefined, // Clear current session
       },
     });
     
@@ -165,6 +180,86 @@ chrome.notifications.onClicked.addListener((notificationId) => {
     console.log('ℹ️ Popup cannot be opened programmatically, but Chrome is now focused');
   });
 });
+
+// Listen for messages from popup to start/stop session recording
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message.action === 'startSession') {
+    handleStartSession(message.data).then(() => {
+      sendResponse({ success: true });
+    });
+    return true; // Keep channel open for async response
+  }
+  
+  if (message.action === 'interruptSession') {
+    handleInterruptSession().then(() => {
+      sendResponse({ success: true });
+    });
+    return true;
+  }
+});
+
+// Create a new session record when timer starts
+async function handleStartSession(data: {
+  sessionType: 'work' | 'shortBreak' | 'longBreak';
+  endTime: number;
+}) {
+  const timerMode = await getStoredTimerMode();
+  const sessionId = generateSessionId();
+  const startTime = new Date().toISOString();
+  const endTime = new Date(data.endTime).toISOString();
+  const duration = Math.ceil((data.endTime - Date.now()) / 1000);
+  
+  const session: SessionRecord = {
+    id: sessionId,
+    type: data.sessionType,
+    timerMode,
+    startTime,
+    endTime, // Will be updated when session completes
+    duration,
+    completed: false,
+    interrupted: false,
+  };
+  
+  await saveSession(session);
+  
+  // Store session ID in timer state
+  chrome.storage.local.get(['timerState'], (result) => {
+    const state = result.timerState as TimerState;
+    chrome.storage.local.set({
+      timerState: {
+        ...state,
+        currentSessionId: sessionId,
+      },
+    });
+  });
+  
+  console.log('📝 Session started:', sessionId, session.type);
+}
+
+// Handle session interruption (reset or pause)
+async function handleInterruptSession() {
+  chrome.storage.local.get(['timerState'], async (result) => {
+    const state = result.timerState as TimerState;
+    
+    if (state.currentSessionId) {
+      await updateSession(state.currentSessionId, {
+        endTime: new Date().toISOString(),
+        completed: false,
+        interrupted: true,
+      });
+      
+      console.log('⏸️ Session interrupted:', state.currentSessionId);
+      
+      // Clear current session ID
+      chrome.storage.local.set({
+        timerState: {
+          ...state,
+          currentSessionId: undefined,
+        },
+      });
+    }
+  });
+}
 
 // Export for use in other parts of the extension
 export {};

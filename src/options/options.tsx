@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { Language, getStoredLanguage, setStoredLanguage, getTranslation } from '../utils/i18n';
 import { Theme, getStoredTheme, setStoredTheme, applyTheme, watchSystemTheme } from '../utils/theme';
 import { TimerMode, TimerDurations, getStoredTimerMode, setStoredTimerMode, getStoredCustomDurations, setStoredCustomDurations, TIMER_PRESETS } from '../utils/timerModes';
+import PageLayout from '../components/PageLayout';
 import './options.css';
 
 type Tab = 'general' | 'timer' | 'theme';
@@ -161,37 +162,33 @@ function OptionsPage() {
   }
 
   return (
-    <div className="options-container">
-      <header className="options-header">
-        <h1>
-          <img src="/icons/icon48.png" alt="LaTomate" className="header-icon" />
-          {t('options.title')}
-        </h1>
-      </header>
+    <PageLayout
+      title={t('options.title')}
+      icon={<img src="/icons/icon48.png" alt="LaTomate" />}
+      language={savedSettings.language}
+    >
+      <nav className="options-tabs">
+        <button
+          className={`tab-button ${activeTab === 'general' ? 'active' : ''}`}
+          onClick={() => setActiveTab('general')}
+        >
+          ⚙️ {t('options.tab.general')}
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'timer' ? 'active' : ''}`}
+          onClick={() => setActiveTab('timer')}
+        >
+          ⏱️ {t('options.tab.timer')}
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'theme' ? 'active' : ''}`}
+          onClick={() => setActiveTab('theme')}
+        >
+          🎨 {t('options.tab.theme')}
+        </button>
+      </nav>
 
-      <div className="options-content">
-        <nav className="options-tabs">
-          <button
-            className={`tab-button ${activeTab === 'general' ? 'active' : ''}`}
-            onClick={() => setActiveTab('general')}
-          >
-            ⚙️ {t('options.tab.general')}
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'timer' ? 'active' : ''}`}
-            onClick={() => setActiveTab('timer')}
-          >
-            ⏱️ {t('options.tab.timer')}
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'theme' ? 'active' : ''}`}
-            onClick={() => setActiveTab('theme')}
-          >
-            🎨 {t('options.tab.theme')}
-          </button>
-        </nav>
-
-        <main className="options-main">
+      <main className="options-main">
           {activeTab === 'general' && (
             <div className="settings-section">
               <h2>{t('options.tab.general')}</h2>
@@ -404,14 +401,6 @@ function OptionsPage() {
             </div>
           )}
         </main>
-      </div>
-
-      <footer className="options-footer">
-        <p>
-          <img src="/icons/icon16.png" alt="LaTomate" className="footer-icon" />
-          LaTomate v0.2.0 • {t('app.madeBy')} <a href="https://github.com/vFoex" target="_blank" rel="noopener noreferrer">vFoex</a>
-        </p>
-      </footer>
 
       {/* Save Portal - appears when there are unsaved changes */}
       {hasChanges && (
@@ -443,7 +432,7 @@ function OptionsPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageLayout>
   );
 }
 

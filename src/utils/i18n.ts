@@ -52,6 +52,16 @@ const translations: Translations = {
     fr: 'Reset',
   },
 
+  // Menu
+  'menu.statistics': {
+    en: 'Statistics',
+    fr: 'Statistiques',
+  },
+  'menu.settings': {
+    en: 'Settings',
+    fr: 'Paramètres',
+  },
+
   // Stats
   'stats.completedPomodoros': {
     en: 'Completed Pomodoros',
@@ -70,8 +80,8 @@ const translations: Translations = {
 
   // Options Page
   'options.title': {
-    en: 'LaTomate Settings',
-    fr: 'Paramètres LaTomate',
+    en: 'Settings',
+    fr: 'Paramètres',
   },
   'options.tab.general': {
     en: 'General',
@@ -204,6 +214,116 @@ const translations: Translations = {
   'common.cancel': {
     en: 'Cancel',
     fr: 'Annuler',
+  },
+
+  // Stats page
+  'stats.title': {
+    en: 'Statistics',
+    fr: 'Statistiques',
+  },
+  'stats.tabs.overview': {
+    en: 'Overview',
+    fr: 'Vue d\'ensemble',
+  },
+  'stats.tabs.details': {
+    en: 'Details',
+    fr: 'Détails',
+  },
+  'stats.tabs.charts': {
+    en: 'Charts',
+    fr: 'Graphiques',
+  },
+  'stats.today': {
+    en: 'Today',
+    fr: 'Aujourd\'hui',
+  },
+  'stats.thisWeek': {
+    en: 'This Week',
+    fr: 'Cette semaine',
+  },
+  'stats.thisMonth': {
+    en: 'This Month',
+    fr: 'Ce mois',
+  },
+  'stats.sessions': {
+    en: 'Sessions',
+    fr: 'Sessions',
+  },
+  'stats.focusTime': {
+    en: 'Focus Time',
+    fr: 'Temps de focus',
+  },
+  'stats.currentStreak': {
+    en: 'Current Streak',
+    fr: 'Série actuelle',
+  },
+  'stats.days': {
+    en: 'days',
+    fr: 'jours',
+  },
+  'stats.hours': {
+    en: 'hours',
+    fr: 'heures',
+  },
+  'stats.minutes': {
+    en: 'minutes',
+    fr: 'minutes',
+  },
+  'stats.completed': {
+    en: 'Completed',
+    fr: 'Complétées',
+  },
+  'stats.interrupted': {
+    en: 'Interrupted',
+    fr: 'Interrompues',
+  },
+  'stats.totalSessions': {
+    en: 'Total Sessions',
+    fr: 'Sessions totales',
+  },
+  'stats.workSessions': {
+    en: 'Work Sessions',
+    fr: 'Sessions de travail',
+  },
+  'stats.completionRate': {
+    en: 'Completion Rate',
+    fr: 'Taux de complétion',
+  },
+  'stats.charts.sessionsOverTime': {
+    en: 'Sessions Over Time',
+    fr: 'Sessions au fil du temps',
+  },
+  'stats.charts.focusTimeByDay': {
+    en: 'Focus Time by Day',
+    fr: 'Temps de focus par jour',
+  },
+  'stats.charts.sessionsByType': {
+    en: 'Sessions by Type',
+    fr: 'Sessions par type',
+  },
+  'stats.charts.completionRate': {
+    en: 'Completion Rate',
+    fr: 'Taux de complétion',
+  },
+  'stats.charts.work': {
+    en: 'Work',
+    fr: 'Travail',
+  },
+  'stats.charts.shortBreak': {
+    en: 'Short Break',
+    fr: 'Pause courte',
+  },
+  'stats.charts.longBreak': {
+    en: 'Long Break',
+    fr: 'Pause longue',
+  },
+  'stats.charts.last7days': {
+    en: 'Last 7 Days',
+    fr: '7 derniers jours',
+  },
+  'stats.charts.last30days': {
+    en: 'Last 30 Days',
+    fr: '30 derniers jours',
   },
 };
 

@@ -20,6 +20,7 @@ function App() {
   const [sessionType, setSessionType] = useState<SessionType>('work');
   const [completedPomodoros, setCompletedPomodoros] = useState(0);
   const [language, setLanguage] = useState<Language>('en');
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Load state from storage on mount
   useEffect(() => {
@@ -172,6 +173,15 @@ function App() {
       }
     });
     
+    // Notify background worker to start session recording
+    chrome.runtime.sendMessage({
+      action: 'startSession',
+      data: {
+        sessionType: sessionType,
+        endTime: endTime,
+      }
+    });
+    
     setTimerState('running');
   };
 
@@ -192,6 +202,11 @@ function App() {
   };
 
   const handleReset = () => {
+    // Notify background worker to mark session as interrupted
+    chrome.runtime.sendMessage({
+      action: 'interruptSession'
+    });
+    
     getActiveTimerDurations().then((dur) => {
       const workDuration = dur.work * 60;
       
@@ -255,13 +270,42 @@ function App() {
             <img src="/icons/icon32.png" alt="LaTomate" className="title-icon" />
             {getTranslation('app.title', language)}
           </h1>
-          <button 
-            className="settings-btn" 
-            onClick={() => chrome.runtime.openOptionsPage()}
-            title="Settings"
-          >
-            ⚙️
-          </button>
+          <div className="menu-container">
+            <button 
+              className="menu-btn" 
+              onClick={() => setMenuOpen(!menuOpen)}
+              title="Menu"
+            >
+              ☰
+            </button>
+            {menuOpen && (
+              <>
+                <div className="menu-backdrop" onClick={() => setMenuOpen(false)} />
+                <div className="menu-dropdown">
+                  <button 
+                    className="menu-item" 
+                    onClick={() => {
+                      chrome.tabs.create({ url: chrome.runtime.getURL('stats.html') });
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <span className="menu-icon">📊</span>
+                    <span className="menu-label">{getTranslation('menu.statistics', language)}</span>
+                  </button>
+                  <button 
+                    className="menu-item" 
+                    onClick={() => {
+                      chrome.runtime.openOptionsPage();
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <span className="menu-icon">⚙️</span>
+                    <span className="menu-label">{getTranslation('menu.settings', language)}</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
         <p className="session-type">{getSessionLabel()}</p>
       </header>

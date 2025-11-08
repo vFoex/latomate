@@ -1,0 +1,112 @@
+/* Page Layout Component - Reusable template for full-page views */
+
+.page-layout-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+}
+
+/* Header */
+.page-layout-header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 2rem 2.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.page-layout-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-layout-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-layout-icon img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+/* Content Area */
+.page-layout-content {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Footer */
+.page-layout-footer {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  padding: 1.5rem;
+  text-align: center;
+  margin-top: auto;
+}
+
+.page-layout-footer p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.page-layout-footer .footer-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+}
+
+.page-layout-footer a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.page-layout-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page-layout-header {
+    padding: 1.5rem 1rem;
+  }
+
+  .page-layout-header h1 {
+    font-size: 22px;
+  }
+
+  .page-layout-icon img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .page-layout-content {
+    padding: 1rem;
+  }
+
+  .page-layout-footer {
+    padding: 1rem;
+  }
+}
