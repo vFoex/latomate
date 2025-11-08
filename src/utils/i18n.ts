@@ -325,6 +325,22 @@ const translations: Translations = {
     en: 'Last 30 Days',
     fr: '30 derniers jours',
   },
+  'stats.activityHeatmap': {
+    en: 'Activity Heatmap',
+    fr: 'Carte de chaleur d\'activité',
+  },
+  'stats.last12Months': {
+    en: 'in the last 12 months',
+    fr: 'dans les 12 derniers mois',
+  },
+  'stats.less': {
+    en: 'Less',
+    fr: 'Moins',
+  },
+  'stats.more': {
+    en: 'Plus',
+    fr: 'Plus',
+  },
 };
 
 export function getTranslation(key: string, lang: Language = 'en'): string {

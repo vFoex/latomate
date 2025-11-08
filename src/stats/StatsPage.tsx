@@ -182,6 +182,25 @@ function OverviewTab({ sessions, language }: { sessions: SessionRecord[]; langua
 
   return (
     <div className="overview-tab">
+      {/* First Row: Current Streak + Activity Heatmap */}
+      <div className="overview-row-1">
+        {/* Current Streak Card */}
+        <div className="stat-card stat-card-highlight">
+          <div className="stat-card-header">
+            <span className="stat-card-icon material-symbols-outlined">local_fire_department</span>
+            <h3>{t('stats.currentStreak')}</h3>
+          </div>
+          <div className="stat-card-content stat-card-center">
+            <div className="streak-value">{currentStreak}</div>
+            <div className="streak-label">{t('stats.days')}</div>
+          </div>
+        </div>
+
+        {/* Activity Heatmap */}
+        <ActivityHeatmap sessions={sessions} language={language} />
+      </div>
+
+      {/* Second Row: Other Stats */}
       <div className="stats-grid">
         {/* Today Card */}
         <div className="stat-card">
@@ -248,19 +267,204 @@ function OverviewTab({ sessions, language }: { sessions: SessionRecord[]; langua
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
 
-        {/* Current Streak Card */}
-        <div className="stat-card stat-card-highlight">
-          <div className="stat-card-header">
-            <span className="stat-card-icon material-symbols-outlined">local_fire_department</span>
-            <h3>{t('stats.currentStreak')}</h3>
+// Activity Heatmap Component (GitHub-style)
+function ActivityHeatmap({ sessions, language }: { sessions: SessionRecord[]; language: Language }) {
+  const t = (key: string) => getTranslation(key, language);
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; date: string; count: number } | null>(null);
+
+  // Generate last 12 months of data (365 days)
+  const generateHeatmapData = () => {
+    const data: { date: Date; count: number; dateString: string }[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Calculate sessions per day
+    const sessionsByDate = new Map<string, number>();
+    sessions.filter(s => s.completed && s.type === 'work').forEach(session => {
+      const date = new Date(session.startTime);
+      date.setHours(0, 0, 0, 0);
+      const dateKey = date.toISOString().split('T')[0];
+      sessionsByDate.set(dateKey, (sessionsByDate.get(dateKey) || 0) + 1);
+    });
+
+    // Generate 365 days (52 weeks / 12 months)
+    for (let i = 364; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateKey = date.toISOString().split('T')[0];
+      data.push({
+        date: new Date(date),
+        count: sessionsByDate.get(dateKey) || 0,
+        dateString: dateKey,
+      });
+    }
+
+    return data;
+  };
+
+  const heatmapData = generateHeatmapData();
+
+  // Group by weeks (chronological order: oldest to newest, left to right)
+  const weeks: typeof heatmapData[] = [];
+  for (let i = 0; i < heatmapData.length; i += 7) {
+    weeks.push(heatmapData.slice(i, i + 7));
+  }
+
+  // Get color intensity based on count
+  const getColor = (count: number): string => {
+    if (count === 0) return 'var(--heatmap-empty)';
+    if (count === 1) return 'var(--heatmap-level-1)';
+    if (count <= 3) return 'var(--heatmap-level-2)';
+    if (count <= 5) return 'var(--heatmap-level-3)';
+    return 'var(--heatmap-level-4)';
+  };
+
+  // Get total sessions
+  const totalSessions = heatmapData.reduce((sum, day) => sum + day.count, 0);
+
+  // Day labels
+  const dayLabels = ['Mon', 'Wed', 'Fri'];
+  const dayIndices = [0, 2, 4];
+
+  // Month labels - show month name only once when month changes
+  const monthLabels: string[] = [];
+  let lastDisplayedMonth = -1;
+  let lastDisplayedYear = -1;
+  
+  weeks.forEach((week) => {
+    if (!week || week.length === 0) {
+      monthLabels.push('');
+      return;
+    }
+    
+    const firstDay = week[0];
+    if (!firstDay) {
+      monthLabels.push('');
+      return;
+    }
+    
+    const currentMonth = firstDay.date.getMonth();
+    const currentYear = firstDay.date.getFullYear();
+    
+    // Show month if it's different from the last displayed month
+    if (currentMonth !== lastDisplayedMonth || currentYear !== lastDisplayedYear) {
+      monthLabels.push(firstDay.date.toLocaleDateString(language, { month: 'short' }));
+      lastDisplayedMonth = currentMonth;
+      lastDisplayedYear = currentYear;
+    } else {
+      monthLabels.push('');
+    }
+  });
+
+  return (
+    <div className="activity-heatmap">
+      <div className="heatmap-header">
+        <h3 className="heatmap-title">
+          <span className="material-symbols-outlined icon-md">calendar_month</span>
+          {t('stats.activityHeatmap') || 'Activity Heatmap'}
+        </h3>
+        <div className="heatmap-summary">
+          {totalSessions} {t('stats.sessions').toLowerCase()} {t('stats.last12Months') || 'in the last 12 months'}
+        </div>
+      </div>
+      
+      <div className="heatmap-container">
+        {/* Month labels */}
+        <div className="heatmap-months">
+          {monthLabels.map((label, index) => (
+            <div key={index} className="month-label">
+              {label}
+            </div>
+          ))}
+        </div>
+        
+        <div className="heatmap-grid-wrapper">
+          {/* Day labels */}
+          <div className="heatmap-days">
+            {dayLabels.map((label, index) => (
+              <div key={label} className="day-label" style={{ gridRow: dayIndices[index] + 1 }}>
+                {label}
+              </div>
+            ))}
           </div>
-          <div className="stat-card-content stat-card-center">
-            <div className="streak-value">{currentStreak}</div>
-            <div className="streak-label">{t('stats.days')}</div>
+
+          {/* Heatmap grid */}
+          <div className="heatmap-grid">
+            {weeks.map((week, weekIndex) => (
+              <div key={weekIndex} className="heatmap-week">
+                {week.map((day) => {
+                  const dateStr = day.date.toLocaleDateString(language, { 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
+                  });
+                  return (
+                    <div
+                      key={day.dateString}
+                      className="heatmap-cell"
+                      style={{ backgroundColor: getColor(day.count) }}
+                      data-count={day.count}
+                      data-date={day.dateString}
+                      onMouseEnter={(e) => {
+                        if (day.count > 0) {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setTooltip({
+                            x: rect.left + rect.width / 2,
+                            y: rect.top - 8,
+                            date: dateStr,
+                            count: day.count
+                          });
+                        }
+                      }}
+                      onMouseLeave={() => setTooltip(null)}
+                    />
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </div>
       </div>
+
+      {/* Legend */}
+      <div className="heatmap-legend">
+        <span className="legend-label">{t('stats.less') || 'Less'}</span>
+        <div className="legend-colors">
+          <div className="legend-cell" style={{ backgroundColor: 'var(--heatmap-empty)' }} />
+          <div className="legend-cell" style={{ backgroundColor: 'var(--heatmap-level-1)' }} />
+          <div className="legend-cell" style={{ backgroundColor: 'var(--heatmap-level-2)' }} />
+          <div className="legend-cell" style={{ backgroundColor: 'var(--heatmap-level-3)' }} />
+          <div className="legend-cell" style={{ backgroundColor: 'var(--heatmap-level-4)' }} />
+        </div>
+        <span className="legend-label">{t('stats.more') || 'More'}</span>
+      </div>
+
+      {/* Tooltip */}
+      {tooltip && (
+        <div
+          className="heatmap-tooltip"
+          style={{
+            position: 'fixed',
+            left: `${tooltip.x}px`,
+            top: `${tooltip.y}px`,
+            transform: 'translate(-50%, -100%)',
+            pointerEvents: 'none',
+            zIndex: 9999
+          }}
+        >
+          <div className="heatmap-tooltip-content">
+            <div className="heatmap-tooltip-count">
+              {tooltip.count} {tooltip.count === 1 ? t('stats.session') || 'session' : t('stats.sessions') || 'sessions'}
+            </div>
+            <div className="heatmap-tooltip-date">{tooltip.date}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
