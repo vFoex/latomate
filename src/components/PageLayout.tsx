@@ -35,7 +35,7 @@ function PageLayout({ title, icon, children, language }: PageLayoutProps) {
       <footer className="page-layout-footer">
         <p>
           <img src="/icons/icon16.png" alt="LaTomate" className="footer-icon" />
-          LaTomate v0.2.0 • {madeByText} <a href="https://github.com/vFoex" target="_blank" rel="noopener noreferrer">vFoex</a>
+          LaTomate v0.3.0 • {madeByText} <a href="https://github.com/vFoex" target="_blank" rel="noopener noreferrer">vFoex</a>
         </p>
       </footer>
     </div>
