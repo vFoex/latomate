@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getTranslation, getStoredLanguage, type Language } from '../utils/i18n';
 import { getStoredTheme, applyTheme, watchSystemTheme } from '../utils/theme';
 import { getActiveTimerDurations, type TimerDurations } from '../utils/timerModes';
+import '../styles/icons.css';
 
 type TimerState = 'idle' | 'running' | 'paused';
 type SessionType = 'work' | 'shortBreak' | 'longBreak';
@@ -276,7 +277,7 @@ function App() {
               onClick={() => setMenuOpen(!menuOpen)}
               title="Menu"
             >
-              ☰
+              <span className="material-symbols-outlined">menu</span>
             </button>
             {menuOpen && (
               <>
@@ -289,7 +290,7 @@ function App() {
                       setMenuOpen(false);
                     }}
                   >
-                    <span className="menu-icon">📊</span>
+                    <span className="material-symbols-outlined menu-icon">bar_chart</span>
                     <span className="menu-label">{getTranslation('menu.statistics', language)}</span>
                   </button>
                   <button 
@@ -299,7 +300,7 @@ function App() {
                       setMenuOpen(false);
                     }}
                   >
-                    <span className="menu-icon">⚙️</span>
+                    <span className="material-symbols-outlined menu-icon">settings</span>
                     <span className="menu-label">{getTranslation('menu.settings', language)}</span>
                   </button>
                 </div>

@@ -100,7 +100,9 @@ function StatsPage() {
           </div>
         ) : sessions.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">📊</div>
+            <div className="empty-state-icon">
+              <span className="material-symbols-outlined icon-xl">insights</span>
+            </div>
             <h2 className="empty-state-title">No sessions yet</h2>
             <p className="empty-state-text">
               Start a Pomodoro session to see your statistics here!
@@ -184,7 +186,7 @@ function OverviewTab({ sessions, language }: { sessions: SessionRecord[]; langua
         {/* Today Card */}
         <div className="stat-card">
           <div className="stat-card-header">
-            <span className="stat-card-icon">📅</span>
+            <span className="stat-card-icon material-symbols-outlined">calendar_today</span>
             <h3>{t('stats.today')}</h3>
           </div>
           <div className="stat-card-content">
@@ -206,7 +208,7 @@ function OverviewTab({ sessions, language }: { sessions: SessionRecord[]; langua
         {/* This Week Card */}
         <div className="stat-card">
           <div className="stat-card-header">
-            <span className="stat-card-icon">📊</span>
+            <span className="stat-card-icon material-symbols-outlined">bar_chart</span>
             <h3>{t('stats.thisWeek')}</h3>
           </div>
           <div className="stat-card-content">
@@ -228,7 +230,7 @@ function OverviewTab({ sessions, language }: { sessions: SessionRecord[]; langua
         {/* This Month Card */}
         <div className="stat-card">
           <div className="stat-card-header">
-            <span className="stat-card-icon">📈</span>
+            <span className="stat-card-icon material-symbols-outlined">trending_up</span>
             <h3>{t('stats.thisMonth')}</h3>
           </div>
           <div className="stat-card-content">
@@ -250,7 +252,7 @@ function OverviewTab({ sessions, language }: { sessions: SessionRecord[]; langua
         {/* Current Streak Card */}
         <div className="stat-card stat-card-highlight">
           <div className="stat-card-header">
-            <span className="stat-card-icon">🔥</span>
+            <span className="stat-card-icon material-symbols-outlined">local_fire_department</span>
             <h3>{t('stats.currentStreak')}</h3>
           </div>
           <div className="stat-card-content stat-card-center">
@@ -418,11 +420,17 @@ function DetailsTab({ _sessions, _language }: { _sessions: SessionRecord[]; _lan
                   <td>{formatDuration(session.duration)}</td>
                   <td>
                     {session.completed ? (
-                      <span className="status-badge status-completed">✅ Completed</span>
+                      <span className="status-badge status-completed">
+                        <span className="material-symbols-outlined icon-sm">check_circle</span> Completed
+                      </span>
                     ) : session.interrupted ? (
-                      <span className="status-badge status-interrupted">⏸️ Interrupted</span>
+                      <span className="status-badge status-interrupted">
+                        <span className="material-symbols-outlined icon-sm">pause_circle</span> Interrupted
+                      </span>
                     ) : (
-                      <span className="status-badge status-pending">⏳ Pending</span>
+                      <span className="status-badge status-pending">
+                        <span className="material-symbols-outlined icon-sm">pending</span> Pending
+                      </span>
                     )}
                   </td>
                   <td>
@@ -544,7 +552,9 @@ function ChartsTab({ _sessions, _language }: { _sessions: SessionRecord[]; _lang
     return (
       <div className="charts-tab">
         <div className="empty-state">
-          <div className="empty-state-icon">📊</div>
+          <div className="empty-state-icon">
+            <span className="material-symbols-outlined icon-xl">insights</span>
+          </div>
           <h2 className="empty-state-title">No data to display</h2>
           <p className="empty-state-text">
             Complete some sessions to see your charts and analytics!
@@ -559,7 +569,9 @@ function ChartsTab({ _sessions, _language }: { _sessions: SessionRecord[]; _lang
       <div className="charts-grid">
         {/* Sessions Over Time */}
         <div className="chart-card chart-card-wide">
-          <h3 className="chart-title">📊 {t('stats.charts.sessionsOverTime')} - {t('stats.charts.last7days')}</h3>
+          <h3 className="chart-title">
+            <span className="material-symbols-outlined icon-md">bar_chart</span> {t('stats.charts.sessionsOverTime')} - {t('stats.charts.last7days')}
+          </h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={last7DaysData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
@@ -581,7 +593,9 @@ function ChartsTab({ _sessions, _language }: { _sessions: SessionRecord[]; _lang
 
         {/* Focus Time by Day */}
         <div className="chart-card chart-card-wide">
-          <h3 className="chart-title">⏱️ {t('stats.charts.focusTimeByDay')} - {t('stats.charts.last7days')}</h3>
+          <h3 className="chart-title">
+            <span className="material-symbols-outlined icon-md">schedule</span> {t('stats.charts.focusTimeByDay')} - {t('stats.charts.last7days')}
+          </h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={focusTimeData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
@@ -610,7 +624,9 @@ function ChartsTab({ _sessions, _language }: { _sessions: SessionRecord[]; _lang
 
         {/* Sessions by Type */}
         <div className="chart-card">
-          <h3 className="chart-title">🎯 {t('stats.charts.sessionsByType')}</h3>
+          <h3 className="chart-title">
+            <span className="material-symbols-outlined icon-md">pie_chart</span> {t('stats.charts.sessionsByType')}
+          </h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -639,8 +655,10 @@ function ChartsTab({ _sessions, _language }: { _sessions: SessionRecord[]; _lang
         </div>
 
         {/* Completion Rate */}
-        <div className="chart-card chart-card-stat">
-          <h3 className="chart-title">✅ {t('stats.charts.completionRate')} - {t('stats.charts.last30days')}</h3>
+        <div className="chart-card">
+          <h3 className="chart-title">
+            <span className="material-symbols-outlined icon-md">check_circle</span> {t('stats.charts.completionRate')} - {t('stats.charts.last30days')}
+          </h3>
           <div className="completion-rate-display">
             <div className="completion-circle">
               <svg viewBox="0 0 200 200">
@@ -667,7 +685,13 @@ function ChartsTab({ _sessions, _language }: { _sessions: SessionRecord[]; _lang
               <div className="completion-value">{completionRate}%</div>
             </div>
             <p className="completion-description">
-              {completionRate >= 80 ? '🎉 Excellent!' : completionRate >= 60 ? '👍 Good job!' : '💪 Keep going!'}
+              {completionRate >= 80 ? (
+                <><span className="material-symbols-outlined icon-sm">celebration</span> Excellent!</>
+              ) : completionRate >= 60 ? (
+                <><span className="material-symbols-outlined icon-sm">thumb_up</span> Good job!</>
+              ) : (
+                <><span className="material-symbols-outlined icon-sm">fitness_center</span> Keep going!</>
+              )}
             </p>
           </div>
         </div>

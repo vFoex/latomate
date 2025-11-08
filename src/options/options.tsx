@@ -172,19 +172,19 @@ function OptionsPage() {
           className={`tab-button ${activeTab === 'general' ? 'active' : ''}`}
           onClick={() => setActiveTab('general')}
         >
-          ⚙️ {t('options.tab.general')}
+          <span className="material-symbols-outlined icon-md">settings</span> {t('options.tab.general')}
         </button>
         <button
           className={`tab-button ${activeTab === 'timer' ? 'active' : ''}`}
           onClick={() => setActiveTab('timer')}
         >
-          ⏱️ {t('options.tab.timer')}
+          <span className="material-symbols-outlined icon-md">timer</span> {t('options.tab.timer')}
         </button>
         <button
           className={`tab-button ${activeTab === 'theme' ? 'active' : ''}`}
           onClick={() => setActiveTab('theme')}
         >
-          🎨 {t('options.tab.theme')}
+          <span className="material-symbols-outlined icon-md">palette</span> {t('options.tab.theme')}
         </button>
       </nav>
 

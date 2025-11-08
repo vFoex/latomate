@@ -1,0 +1,42 @@
+/* Material Symbols Icons - Global Styles */
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'liga';
+  vertical-align: middle;
+}
+
+/* Size variants */
+.material-symbols-outlined.icon-sm {
+  font-size: 18px;
+}
+
+.material-symbols-outlined.icon-md {
+  font-size: 24px;
+}
+
+.material-symbols-outlined.icon-lg {
+  font-size: 32px;
+}
+
+.material-symbols-outlined.icon-xl {
+  font-size: 48px;
+}
+
+/* Fill variant (filled icons) */
+.material-symbols-outlined.filled {
+  font-variation-settings: 'FILL' 1;
+}

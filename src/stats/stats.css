@@ -561,18 +561,14 @@ body {
   grid-column: span 2;
 }
 
-.chart-card-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
 .chart-title {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 20px;
   color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 /* Completion Rate Circle */
