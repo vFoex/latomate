@@ -2,7 +2,7 @@
 
 > An elegant and powerful Chrome Pomodoro extension to improve your focus and productivity
 
-![Version](https://img.shields.io/badge/version-0.2.0-red.svg)
+![Version](https://img.shields.io/badge/version-0.3.0-red.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
@@ -13,20 +13,29 @@ LaTomate is a modern Chrome extension that implements the Pomodoro Technique to 
 
 ### ✨ Features
 
-#### Current Version (v0.2.0) - MVP
-- ⏱️ Classic Pomodoro timer (25/5/15)
-- ⏸️ Start/Pause/Reset controls
-- 🔔 End-of-session notifications
-- 🎨 Elegant and minimalist interface
-- 🌍 Multi-language support (English/French)
-- 🔄 Multiple modes (45/15, 52/17, custom)
+#### Current Version (v0.3.0)
+- ⏱️ **Multiple Timer Modes**
+  - 🍅 Classic Pomodoro (25/5/15)
+  - 💪 Intensive Mode (45/15/30)
+  - 💻 Developer Mode 52-17 (52/17/17)
+  - ⚙️ Custom Mode (define your own durations)
+- ⏸️ **Timer Controls**: Start/Pause/Reset
+- 🔔 **Smart Notifications**: Customizable end-of-session alerts
+- � **Advanced Statistics**
+  - Overview with current streak and key metrics
+  - GitHub-style activity heatmap (365 days)
+  - Interactive charts (sessions over time, focus time, completion rate)
+  - Detailed session history with filters
+- 🎨 **Modern UI**: Clean and minimalist interface with Material Icons
+- 🌓 **Theme Support**: Light, Dark, and Auto (follows system)
+- 🌍 **Multi-language**: English and French
 
 #### Coming Soon
 - 🎵 Ambient sounds (rain, café, nature)
-- 📊 Activity tracking and statistics
 - 📝 Note-taking during sessions
 - 🚫 Tab management and site blocking
 - 🤖 Integrated LLM assistant
+- ☁️ Cloud sync with Firebase
 
 ## 🚀 Installation
 
@@ -70,10 +79,31 @@ npm run build
 
 ## 📖 How to Use
 
-1. **Start a session**: Click the "Start" button
-2. **Work**: Focus for 25 minutes
-3. **Break**: Enjoy your 5-minute break
-4. **Repeat**: After 4 sessions, take a long 15-minute break
+### Basic Usage
+
+1. **Choose your mode**: Select from Pomodoro, Intensive, 52-17, or Custom in Settings
+2. **Start a session**: Click the "Start" button in the popup
+3. **Focus**: Work during your session without distractions
+4. **Take breaks**: Enjoy short breaks between sessions
+5. **Track progress**: View your statistics and activity heatmap
+
+### Statistics Page
+
+Access detailed insights about your productivity:
+
+- **Overview Tab**: Current streak, today's stats, weekly and monthly summaries
+- **Activity Heatmap**: GitHub-style visualization of your last 365 days
+- **Details Tab**: Complete session history with advanced filters
+- **Charts Tab**: Visual analytics with interactive graphs
+
+### Settings
+
+Customize LaTomate to your needs:
+
+- **Timer**: Choose your preferred work/break pattern
+- **Theme**: Light, Dark, or Auto (system preference)
+- **Language**: English or French
+- **Notifications**: Enable/disable session completion alerts
 
 ## 🎨 Screenshots
 
@@ -88,6 +118,18 @@ Contributions are welcome! Here's how to participate:
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
+
+
+### Next Steps
+- [x] Multiple Pomodoro modes (Classic, Intensive, 52-17, Custom)
+- [x] Activity tracking and statistics with interactive charts
+- [x] GitHub-style activity heatmap
+- [x] Theme support (Light/Dark/Auto)
+- [ ] Deploy to Chrome Web Store
+- [ ] Ambient sounds
+- [ ] Note-taking during sessions
+- [ ] Tab management and site blocking
+- [ ] Cloud sync with Firebase
 
 ## 📄 License
 
