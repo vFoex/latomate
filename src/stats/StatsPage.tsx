@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { getSessions, deleteSession } from '../utils/storage';
 import { getStoredLanguage, getTranslation, type Language } from '../utils/i18n';
 import { getStoredTheme, applyTheme, watchSystemTheme } from '../utils/theme';
@@ -126,20 +127,20 @@ function OverviewTab({ sessions, language }: { sessions: SessionRecord[]; langua
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const todaySessions = sessions.filter(s => new Date(s.startTime) >= today);
-  const todayCompleted = todaySessions.filter(s => s.completed);
+  const todayCompleted = todaySessions.filter(s => s.completed && s.type === 'work');
   const todayFocusTime = todayCompleted.reduce((total, s) => total + (s.duration || 0), 0);
 
   // Calculate this week's stats
   const weekStart = new Date(today);
   weekStart.setDate(weekStart.getDate() - weekStart.getDay());
   const weekSessions = sessions.filter(s => new Date(s.startTime) >= weekStart);
-  const weekCompleted = weekSessions.filter(s => s.completed);
+  const weekCompleted = weekSessions.filter(s => s.completed && s.type === 'work');
   const weekFocusTime = weekCompleted.reduce((total, s) => total + (s.duration || 0), 0);
 
   // Calculate this month's stats
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthSessions = sessions.filter(s => new Date(s.startTime) >= monthStart);
-  const monthCompleted = monthSessions.filter(s => s.completed);
+  const monthCompleted = monthSessions.filter(s => s.completed && s.type === 'work');
   const monthFocusTime = monthCompleted.reduce((total, s) => total + (s.duration || 0), 0);
 
   // Calculate streak (consecutive days with at least one completed session)
@@ -166,9 +167,9 @@ function OverviewTab({ sessions, language }: { sessions: SessionRecord[]; langua
 
   const currentStreak = calculateStreak();
 
-  // Format time helper
-  const formatTime = (ms: number) => {
-    const totalMinutes = Math.floor(ms / 60000);
+  // Format time helper (duration is in seconds)
+  const formatTime = (seconds: number) => {
+    const totalMinutes = Math.floor(seconds / 60);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
     
@@ -445,7 +446,7 @@ function ActivityHeatmap({ sessions, language }: { sessions: SessionRecord[]; la
       </div>
 
       {/* Tooltip */}
-      {tooltip && (
+      {tooltip && createPortal(
         <div
           className="heatmap-tooltip"
           style={{
@@ -463,7 +464,8 @@ function ActivityHeatmap({ sessions, language }: { sessions: SessionRecord[]; la
             </div>
             <div className="heatmap-tooltip-date">{tooltip.date}</div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -703,11 +705,11 @@ function ChartsTab({ _sessions, _language }: { _sessions: SessionRecord[]; _lang
       
       const daySessions = _sessions.filter(s => {
         const sessionDate = new Date(s.startTime);
-        return sessionDate >= date && sessionDate < nextDay && s.completed;
+        return sessionDate >= date && sessionDate < nextDay && s.completed && s.type === 'work';
       });
       
       const totalMinutes = daySessions.reduce((sum, s) => {
-        return sum + Math.floor((s.duration || 0) / 60000);
+        return sum + Math.floor((s.duration || 0) / 60);
       }, 0);
       
       data.push({

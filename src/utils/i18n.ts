@@ -249,6 +249,10 @@ const translations: Translations = {
     en: 'Sessions',
     fr: 'Sessions',
   },
+  'stats.session': {
+    en: 'session',
+    fr: 'session',
+  },
   'stats.focusTime': {
     en: 'Focus Time',
     fr: 'Temps de focus',
