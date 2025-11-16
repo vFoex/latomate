@@ -345,6 +345,32 @@ const translations: Translations = {
     en: 'Plus',
     fr: 'Plus',
   },
+
+  // Feedback Section
+  'feedback.title': {
+    en: 'Help us improve LaTomate',
+    fr: 'Aidez-nous à améliorer LaTomate',
+  },
+  'feedback.description': {
+    en: 'Your feedback helps make LaTomate better for everyone! Share your thoughts, request features, or report issues.',
+    fr: 'Vos retours aident à améliorer LaTomate pour tout le monde ! Partagez vos idées, demandez des fonctionnalités ou signalez des problèmes.',
+  },
+  'feedback.rate': {
+    en: 'Rate on Chrome Store',
+    fr: 'Noter sur Chrome Store',
+  },
+  'feedback.suggest': {
+    en: 'Suggest a Feature',
+    fr: 'Suggérer une fonctionnalité',
+  },
+  'feedback.bug': {
+    en: 'Report a Bug',
+    fr: 'Signaler un bug',
+  },
+  'feedback.note': {
+    en: '💡 Your suggestions directly influence our roadmap!',
+    fr: '💡 Vos suggestions influencent directement notre feuille de route !',
+  },
 };
 
 export function getTranslation(key: string, lang: Language = 'en'): string {

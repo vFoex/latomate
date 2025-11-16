@@ -524,6 +524,121 @@ body {
   }
 }
 
+/* Feedback Section */
+.feedback-section {
+  margin-top: 2rem;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-card);
+  transition: all 0.2s ease;
+}
+
+.feedback-section:hover {
+  border-color: var(--color-primary);
+}
+
+.feedback-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem;
+  cursor: pointer;
+  user-select: none;
+  background: var(--bg-secondary);
+}
+
+.feedback-header:hover {
+  background: var(--bg-card-hover);
+}
+
+.feedback-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.feedback-title .material-icons {
+  color: var(--color-primary);
+  font-size: 1.5rem;
+}
+
+.feedback-title h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.feedback-content {
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.feedback-description {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.feedback-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.feedback-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.25rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.feedback-button:hover {
+  border-color: var(--color-primary);
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.feedback-button.primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.feedback-button.primary:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.feedback-button .material-icons {
+  font-size: 1.25rem;
+}
+
+.feedback-stats {
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border-color);
+}
+
+.feedback-note {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-style: italic;
+  margin: 0;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .options-content {
@@ -544,6 +659,10 @@ body {
   .timer-modes,
   .theme-options,
   .duration-inputs {
+    grid-template-columns: 1fr;
+  }
+
+  .feedback-actions {
     grid-template-columns: 1fr;
   }
 }

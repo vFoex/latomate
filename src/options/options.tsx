@@ -4,6 +4,7 @@ import { Language, getStoredLanguage, setStoredLanguage, getTranslation } from '
 import { Theme, getStoredTheme, setStoredTheme, applyTheme, watchSystemTheme } from '../utils/theme';
 import { TimerMode, TimerDurations, getStoredTimerMode, setStoredTimerMode, getStoredCustomDurations, setStoredCustomDurations, TIMER_PRESETS } from '../utils/timerModes';
 import PageLayout from '../components/PageLayout';
+import FeedbackSection from '../components/FeedbackSection';
 import './options.css';
 
 type Tab = 'general' | 'timer' | 'theme';
@@ -224,6 +225,9 @@ function OptionsPage() {
                   />
                 </label>
               </div>
+
+              {/* Feedback Section */}
+              <FeedbackSection language={savedSettings.language} />
             </div>
           )}
 
