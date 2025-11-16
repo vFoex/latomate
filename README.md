@@ -2,7 +2,7 @@
 
 > An elegant and powerful Chrome Pomodoro extension to improve your focus and productivity
 
-![Version](https://img.shields.io/badge/version-0.3.0-red.svg)
+![Version](https://img.shields.io/badge/version-0.4.0-red.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
@@ -13,7 +13,7 @@ LaTomate is a modern Chrome extension that implements the Pomodoro Technique to 
 
 ### ✨ Features
 
-#### Current Version (v0.3.0)
+#### Current Version (v0.4.0)
 - ⏱️ **Multiple Timer Modes**
   - 🍅 Classic Pomodoro (25/5/15)
   - 💪 Intensive Mode (45/15/30)
@@ -21,11 +21,12 @@ LaTomate is a modern Chrome extension that implements the Pomodoro Technique to 
   - ⚙️ Custom Mode (define your own durations)
 - ⏸️ **Timer Controls**: Start/Pause/Reset
 - 🔔 **Smart Notifications**: Customizable end-of-session alerts
-- � **Advanced Statistics**
+- 📊 **Advanced Statistics**
   - Overview with current streak and key metrics
   - GitHub-style activity heatmap (365 days)
   - Interactive charts (sessions over time, focus time, completion rate)
   - Detailed session history with filters
+- 💬 **User Feedback System**: Rate, suggest features, or report bugs directly from the app
 - 🎨 **Modern UI**: Clean and minimalist interface with Material Icons
 - 🌓 **Theme Support**: Light, Dark, and Auto (follows system)
 - 🌍 **Multi-language**: English and French
