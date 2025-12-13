@@ -21,8 +21,21 @@
   "options_page": "options.html",
   "permissions": [
     "storage",
-    "notifications"
+    "notifications",
+    "identity"
   ],
+  "host_permissions": [
+    "https://*.googleapis.com/*",
+    "https://*.firebaseapp.com/*",
+    "https://accounts.google.com/*"
+  ],
+  "oauth2": {
+    "client_id": "744866927666-1vl9r93k9fmnqftbr5m21s66lrjsbso9.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+    ]
+  },
   "background": {
     "service_worker": "src/background/service-worker.ts",
     "type": "module"

@@ -51,6 +51,10 @@ const translations: Translations = {
     en: 'Reset',
     fr: 'Reset',
   },
+  'button.reinit': {
+    en: 'Reinit',
+    fr: 'Réinitialiser',
+  },
 
   // Menu
   'menu.statistics': {
@@ -370,6 +374,78 @@ const translations: Translations = {
   'feedback.note': {
     en: '💡 Your suggestions directly influence our roadmap!',
     fr: '💡 Vos suggestions influencent directement notre feuille de route !',
+  },
+
+  // Authentication
+  'auth.signIn': {
+    en: 'Sign in with Google',
+    fr: 'Se connecter avec Google',
+  },
+  'auth.signOut': {
+    en: 'Sign out',
+    fr: 'Se déconnecter',
+  },
+  'auth.loading': {
+    en: 'Loading...',
+    fr: 'Chargement...',
+  },
+  'auth.prompt': {
+    en: 'Sign in to sync your data across devices',
+    fr: 'Connectez-vous pour synchroniser vos données entre appareils',
+  },
+  'auth.profile': {
+    en: 'Profile',
+    fr: 'Profil',
+  },
+
+  // Sync
+  'sync.status': {
+    en: 'Sync Status',
+    fr: 'État de la synchronisation',
+  },
+  'sync.syncing': {
+    en: 'Syncing...',
+    fr: 'Synchronisation...',
+  },
+  'sync.synced': {
+    en: 'Synced',
+    fr: 'Synchronisé',
+  },
+  'sync.error': {
+    en: 'Sync error',
+    fr: 'Erreur de synchronisation',
+  },
+  'sync.lastSync': {
+    en: 'Last sync',
+    fr: 'Dernière synchro',
+  },
+  'sync.never': {
+    en: 'Never',
+    fr: 'Jamais',
+  },
+  'sync.now': {
+    en: 'Sync now',
+    fr: 'Synchroniser',
+  },
+  'sync.settings': {
+    en: 'Sync Settings',
+    fr: 'Paramètres de synchronisation',
+  },
+  'sync.settingsOnly': {
+    en: 'Settings only',
+    fr: 'Paramètres uniquement',
+  },
+  'sync.fullHistory': {
+    en: 'Full session history',
+    fr: 'Historique complet des sessions',
+  },
+  'sync.deleteCloud': {
+    en: 'Delete all cloud data',
+    fr: 'Supprimer toutes les données cloud',
+  },
+  'sync.deleteConfirm': {
+    en: 'Are you sure? This cannot be undone.',
+    fr: 'Êtes-vous sûr ? Cette action est irréversible.',
   },
 };
 

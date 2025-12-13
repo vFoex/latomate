@@ -22,6 +22,7 @@ function App() {
   const [completedPomodoros, setCompletedPomodoros] = useState(0);
   const [language, setLanguage] = useState<Language>('en');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [resetClicked, setResetClicked] = useState(false);
 
   // Load state from storage on mount
   useEffect(() => {
@@ -203,28 +204,68 @@ function App() {
   };
 
   const handleReset = () => {
-    // Notify background worker to mark session as interrupted
-    chrome.runtime.sendMessage({
-      action: 'interruptSession'
-    });
+    // If timer is idle and reset was already clicked, do a full reinit
+    if (timerState === 'idle' && resetClicked) {
+      getActiveTimerDurations().then((dur) => {
+        const workDuration = dur.work * 60;
+        
+        // Reset everything: timer, sessions, and step
+        chrome.storage.local.set({
+          timerState: {
+            isRunning: false,
+            isPaused: false,
+            endTime: null,
+            sessionType: 'work',
+            completedPomodoros: 0, // Reset completed pomodoros
+          }
+        });
+        
+        setTimerState('idle');
+        setSessionType('work');
+        setTimeLeft(workDuration);
+        setCompletedPomodoros(0);
+        setResetClicked(false); // Reset the flag
+      });
+      return;
+    }
     
-    getActiveTimerDurations().then((dur) => {
-      const workDuration = dur.work * 60;
-      
-      chrome.storage.local.set({
-        timerState: {
-          isRunning: false,
-          isPaused: false,
-          endTime: null,
-          sessionType: 'work',
-          completedPomodoros: completedPomodoros,
-        }
+    // First reset: just reset the timer if it's running/paused
+    if (timerState === 'running' || timerState === 'paused') {
+      // Notify background worker to mark session as interrupted
+      chrome.runtime.sendMessage({
+        action: 'interruptSession'
       });
       
-      setTimerState('idle');
-      setSessionType('work');
-      setTimeLeft(workDuration);
-    });
+      getActiveTimerDurations().then((dur) => {
+        const workDuration = dur.work * 60;
+        
+        chrome.storage.local.set({
+          timerState: {
+            isRunning: false,
+            isPaused: false,
+            endTime: null,
+            sessionType: 'work',
+            completedPomodoros: completedPomodoros, // Keep current count
+          }
+        });
+        
+        setTimerState('idle');
+        setSessionType('work');
+        setTimeLeft(workDuration);
+        setResetClicked(false);
+      });
+      return;
+    }
+    
+    // If already idle, set the flag to indicate next click will do full reset
+    setResetClicked(true);
+    
+    // Auto-reset the flag after 2 seconds if not clicked again
+    const timeout = setTimeout(() => {
+      setResetClicked(false);
+    }, 2000);
+    
+    return () => clearTimeout(timeout);
   };
 
   const formatTime = (seconds: number): string => {
@@ -339,7 +380,10 @@ function App() {
             </button>
           )}
           <button className="btn btn-reset" onClick={handleReset}>
-            {getTranslation('button.reset', language)}
+            {resetClicked && timerState === 'idle'
+              ? getTranslation('button.reinit', language)
+              : getTranslation('button.reset', language)
+            }
           </button>
         </div>
 
