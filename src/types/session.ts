@@ -13,6 +13,7 @@ export interface SessionRecord {
   completed: boolean;
   interrupted: boolean;
   notes?: string; // Pour Phase 6 (Prise de notes)
+  tags?: string[]; // Tags associés à la session (Phase 5.1)
 }
 
 export interface SessionStats {

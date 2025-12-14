@@ -4,21 +4,24 @@ import { getSessions, deleteSession } from '../utils/storage';
 import { getStoredLanguage, getTranslation, type Language } from '../utils/i18n';
 import { getStoredTheme, applyTheme, watchSystemTheme } from '../utils/theme';
 import type { SessionRecord, SessionType, TimerMode } from '../types';
+import type { SessionTag } from '../types/settings';
+import { getUserTags } from '../utils/tags';
 import PageLayout from '../components/PageLayout';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './stats.css';
 
-type Tab = 'overview' | 'details' | 'charts';
+type Tab = 'overview' | 'details' | 'charts' | 'tags';
 
 type FilterType = 'all' | SessionType;
 type FilterMode = 'all' | TimerMode;
-type FilterDate = 'all' | 'today' | 'week' | 'month';
+type FilterDate = 'all' | 'today' | 'week' | 'month' | 'custom';
 
 function StatsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
   const [language, setLanguage] = useState<Language>('en');
   const [loading, setLoading] = useState(true);
+  const [availableTags, setAvailableTags] = useState<SessionTag[]>([]);
 
   useEffect(() => {
     // Load language
@@ -37,6 +40,12 @@ function StatsPage() {
     
     // Load sessions
     loadSessions();
+    
+    // Load available tags
+    getUserTags().then(tags => {
+      console.log('🏷️ [Stats] Loaded available tags:', { count: tags.length, tags: tags.map(t => t.name) });
+      setAvailableTags(tags);
+    });
     
     // Listen for language/theme changes
     const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
@@ -62,6 +71,16 @@ function StatsPage() {
   const loadSessions = async () => {
     setLoading(true);
     const allSessions = await getSessions();
+    console.log('📊 [Stats] Loaded sessions:', { 
+      totalSessions: allSessions.length,
+      sessionsWithTags: allSessions.filter(s => s.tags && s.tags.length > 0).length,
+      sessions: allSessions.map(s => ({ 
+        id: s.id, 
+        type: s.type, 
+        tags: s.tags,
+        tagCount: s.tags?.length || 0 
+      }))
+    });
     setSessions(allSessions);
     setLoading(false);
   };
@@ -91,6 +110,12 @@ function StatsPage() {
         >
           {getTranslation('stats.tabs.charts', language)}
         </button>
+        <button
+          className={`tab ${activeTab === 'tags' ? 'active' : ''}`}
+          onClick={() => setActiveTab('tags')}
+        >
+          {getTranslation('stats.tabs.tags', language)}
+        </button>
       </nav>
 
       <main className="stats-content">
@@ -112,8 +137,9 @@ function StatsPage() {
         ) : (
           <>
             {activeTab === 'overview' && <OverviewTab sessions={sessions} language={language} />}
-            {activeTab === 'details' && <DetailsTab _sessions={sessions} _language={language} />}
+            {activeTab === 'details' && <DetailsTab _sessions={sessions} _language={language} _availableTags={availableTags} />}
             {activeTab === 'charts' && <ChartsTab _sessions={sessions} _language={language} />}
+            {activeTab === 'tags' && <TagsTab _sessions={sessions} language={language} _availableTags={availableTags} />}
           </>
         )}
       </main>
@@ -472,10 +498,12 @@ function ActivityHeatmap({ sessions, language }: { sessions: SessionRecord[]; la
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function DetailsTab({ _sessions, _language }: { _sessions: SessionRecord[]; _language: Language }) {
+function DetailsTab({ _sessions, _language, _availableTags }: { _sessions: SessionRecord[]; _language: Language; _availableTags: SessionTag[] }) {
   const [filterType, setFilterType] = useState<FilterType>('all');
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [filterDate, setFilterDate] = useState<FilterDate>('all');
+  const [customStartDate, setCustomStartDate] = useState<string>('');
+  const [customEndDate, setCustomEndDate] = useState<string>('');
   const [filteredSessions, setFilteredSessions] = useState<SessionRecord[]>(_sessions);
 
   useEffect(() => {
@@ -506,11 +534,22 @@ function DetailsTab({ _sessions, _language }: { _sessions: SessionRecord[]; _lan
         const monthAgo = new Date(today);
         monthAgo.setMonth(monthAgo.getMonth() - 1);
         filtered = filtered.filter(s => new Date(s.startTime) >= monthAgo);
+      } else if (filterDate === 'custom') {
+        if (customStartDate) {
+          const startDate = new Date(customStartDate);
+          startDate.setHours(0, 0, 0, 0);
+          filtered = filtered.filter(s => new Date(s.startTime) >= startDate);
+        }
+        if (customEndDate) {
+          const endDate = new Date(customEndDate);
+          endDate.setHours(23, 59, 59, 999);
+          filtered = filtered.filter(s => new Date(s.startTime) <= endDate);
+        }
       }
     }
 
     setFilteredSessions(filtered);
-  }, [_sessions, filterType, filterMode, filterDate]);
+  }, [_sessions, filterType, filterMode, filterDate, customStartDate, customEndDate]);
 
   const handleDelete = async (sessionId: string) => {
     if (confirm('Are you sure you want to delete this session?')) {
@@ -562,8 +601,32 @@ function DetailsTab({ _sessions, _language }: { _sessions: SessionRecord[]; _lan
             <option value="today">Today</option>
             <option value="week">Last 7 days</option>
             <option value="month">Last 30 days</option>
+            <option value="custom">Custom period</option>
           </select>
         </div>
+
+        {filterDate === 'custom' && (
+          <>
+            <div className="filter-group">
+              <label>From:</label>
+              <input 
+                type="date" 
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                className="date-input"
+              />
+            </div>
+            <div className="filter-group">
+              <label>To:</label>
+              <input 
+                type="date" 
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                className="date-input"
+              />
+            </div>
+          </>
+        )}
 
         <div className="filter-group">
           <label>Type:</label>
@@ -608,6 +671,7 @@ function DetailsTab({ _sessions, _language }: { _sessions: SessionRecord[]; _lan
                 <th>Start Time</th>
                 <th>Duration</th>
                 <th>Status</th>
+                <th>Tags</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -638,6 +702,29 @@ function DetailsTab({ _sessions, _language }: { _sessions: SessionRecord[]; _lan
                         <span className="material-symbols-outlined icon-sm">pending</span> Pending
                       </span>
                     )}
+                  </td>
+                  <td>
+                    <div className="session-tags">
+                      {session.tags && session.tags.length > 0 ? (
+                        session.tags.map((tagId) => {
+                          const tag = _availableTags.find(t => t.id === tagId);
+                          return tag ? (
+                            <span
+                              key={tag.id}
+                              className="tag-badge-small"
+                              style={{
+                                backgroundColor: tag.color,
+                                color: '#fff'
+                              }}
+                            >
+                              {tag.name}
+                            </span>
+                          ) : null;
+                        })
+                      ) : (
+                        <span className="no-tags">-</span>
+                      )}
+                    </div>
                   </td>
                   <td>
                     <button
@@ -902,6 +989,196 @@ function ChartsTab({ _sessions, _language }: { _sessions: SessionRecord[]; _lang
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function TagsTab({ _sessions, language, _availableTags }: { _sessions: SessionRecord[]; language: Language; _availableTags: SessionTag[] }) {
+  const [filterDate, setFilterDate] = useState<FilterDate>('all');
+  const [customStartDate, setCustomStartDate] = useState<string>('');
+  const [customEndDate, setCustomEndDate] = useState<string>('');
+
+  // Calculate tag statistics
+  const getTagStats = () => {
+    let filtered = [..._sessions];
+
+    // Filter by date
+    if (filterDate !== 'all') {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      if (filterDate === 'today') {
+        filtered = filtered.filter(s => new Date(s.startTime) >= today);
+      } else if (filterDate === 'week') {
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        filtered = filtered.filter(s => new Date(s.startTime) >= weekAgo);
+      } else if (filterDate === 'month') {
+        const monthAgo = new Date(today);
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        filtered = filtered.filter(s => new Date(s.startTime) >= monthAgo);
+      } else if (filterDate === 'custom') {
+        if (customStartDate) {
+          const startDate = new Date(customStartDate);
+          startDate.setHours(0, 0, 0, 0);
+          filtered = filtered.filter(s => new Date(s.startTime) >= startDate);
+        }
+        if (customEndDate) {
+          const endDate = new Date(customEndDate);
+          endDate.setHours(23, 59, 59, 999);
+          filtered = filtered.filter(s => new Date(s.startTime) <= endDate);
+        }
+      }
+    }
+
+    // Build tag statistics
+    const tagStats = new Map<string, { tag: SessionTag; sessionCount: number; totalTime: number; completedSessions: number }>();
+
+    _availableTags.forEach(tag => {
+      tagStats.set(tag.id, {
+        tag,
+        sessionCount: 0,
+        totalTime: 0,
+        completedSessions: 0
+      });
+    });
+
+    filtered.forEach(session => {
+      if (session.tags && session.tags.length > 0) {
+        session.tags.forEach(tagId => {
+          const stat = tagStats.get(tagId);
+          if (stat) {
+            stat.sessionCount += 1;
+            stat.totalTime += session.duration || 0;
+            if (session.completed && session.type === 'work') {
+              stat.completedSessions += 1;
+            }
+          }
+        });
+      }
+    });
+
+    return Array.from(tagStats.values()).filter(s => s.sessionCount > 0);
+  };
+
+  const tagStats = getTagStats();
+
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+
+  const getCompletionRate = (stat: { completedSessions: number; sessionCount: number }) => {
+    return stat.sessionCount > 0 ? Math.round((stat.completedSessions / stat.sessionCount) * 100) : 0;
+  };
+
+  // Suppress language unused warning by using it in a comment - it's passed for potential future use
+  void language;
+
+  return (
+    <div className="tags-tab">
+      {/* Filter */}
+      <div className="filters-container">
+        <div className="filter-group">
+          <label>Date:</label>
+          <select value={filterDate} onChange={(e) => setFilterDate(e.target.value as FilterDate)}>
+            <option value="all">All time</option>
+            <option value="today">Today</option>
+            <option value="week">Last 7 days</option>
+            <option value="month">Last 30 days</option>
+            <option value="custom">Custom period</option>
+          </select>
+        </div>
+
+        {filterDate === 'custom' && (
+          <>
+            <div className="filter-group">
+              <label>From:</label>
+              <input 
+                type="date" 
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                className="date-input"
+              />
+            </div>
+            <div className="filter-group">
+              <label>To:</label>
+              <input 
+                type="date" 
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                className="date-input"
+              />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Tag Statistics */}
+      {tagStats.length === 0 ? (
+        <div className="empty-state" style={{ marginTop: '40px' }}>
+          <div className="empty-state-icon">
+            <span className="material-symbols-outlined icon-xl">label</span>
+          </div>
+          <h3 className="empty-state-title">No tagged sessions yet</h3>
+          <p className="empty-state-text">Add tags to your sessions to see statistics here</p>
+        </div>
+      ) : (
+        <div className="tags-stats-container">
+          {tagStats
+            .sort((a, b) => b.totalTime - a.totalTime)
+            .map(stat => (
+              <div key={stat.tag.id} className="tag-stat-card">
+                <div className="tag-stat-header">
+                  <div className="tag-stat-title">
+                    <span
+                      className="tag-color-indicator"
+                      style={{ backgroundColor: stat.tag.color }}
+                    />
+                    <h3>{stat.tag.name}</h3>
+                  </div>
+                </div>
+
+                <div className="tag-stat-metrics">
+                  <div className="metric">
+                    <span className="metric-label">Sessions</span>
+                    <span className="metric-value">{stat.sessionCount}</span>
+                  </div>
+
+                  <div className="metric">
+                    <span className="metric-label">Total Time</span>
+                    <span className="metric-value">{formatTime(stat.totalTime)}</span>
+                  </div>
+
+                  <div className="metric">
+                    <span className="metric-label">Avg. Per Session</span>
+                    <span className="metric-value">{formatTime(Math.floor(stat.totalTime / stat.sessionCount))}</span>
+                  </div>
+
+                  <div className="metric">
+                    <span className="metric-label">Completion Rate</span>
+                    <span className="metric-value">{getCompletionRate(stat)}%</span>
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="tag-progress-container">
+                  <div
+                    className="tag-progress-bar"
+                    style={{
+                      backgroundColor: stat.tag.color,
+                      width: `${getCompletionRate(stat)}%`
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+        </div>
+      )}
     </div>
   );
 }

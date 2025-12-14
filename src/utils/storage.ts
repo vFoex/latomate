@@ -81,6 +81,12 @@ export async function getSessions(filters?: {
   // Sort by startTime descending (most recent first)
   sessions.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
   
+  console.log('💾 [Storage] getSessions() returning:', {
+    totalSessions: sessions.length,
+    sessionsWithTags: sessions.filter(s => s.tags && s.tags.length > 0).length,
+    sampleSessions: sessions.slice(0, 3).map(s => ({ id: s.id, type: s.type, tags: s.tags, tagCount: s.tags?.length || 0 }))
+  });
+  
   return sessions;
 }
 

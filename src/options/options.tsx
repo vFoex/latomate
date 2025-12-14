@@ -5,9 +5,11 @@ import { Theme, getStoredTheme, setStoredTheme, applyTheme, watchSystemTheme } f
 import { TimerMode, TimerDurations, getStoredTimerMode, setStoredTimerMode, getStoredCustomDurations, setStoredCustomDurations, TIMER_PRESETS } from '../utils/timerModes';
 import PageLayout from '../components/PageLayout';
 import FeedbackSection from '../components/FeedbackSection';
+import AuthButton from '../components/AuthButton';
+import { TagsManager } from '../components/TagsManager';
 import './options.css';
 
-type Tab = 'general' | 'timer' | 'theme';
+type Tab = 'general' | 'timer' | 'theme' | 'tags';
 
 interface Settings {
   language: Language;
@@ -187,6 +189,12 @@ function OptionsPage() {
         >
           <span className="material-symbols-outlined icon-md">palette</span> {t('options.tab.theme')}
         </button>
+        <button
+          className={`tab-button ${activeTab === 'tags' ? 'active' : ''}`}
+          onClick={() => setActiveTab('tags')}
+        >
+          <span className="material-symbols-outlined icon-md">label</span> {t('tags.title')}
+        </button>
       </nav>
 
       <main className="options-main">
@@ -225,6 +233,9 @@ function OptionsPage() {
                   />
                 </label>
               </div>
+
+              {/* Cloud Sync / Auth */}
+              <AuthButton language={savedSettings.language} />
 
               {/* Feedback Section */}
               <FeedbackSection language={savedSettings.language} />
@@ -402,6 +413,14 @@ function OptionsPage() {
                   <span className="theme-description">{t('theme.auto.description')}</span>
                 </label>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'tags' && (
+            <div className="settings-section">
+              <h2>{t('tags.title')}</h2>
+              <p className="section-description">{t('tags.description')}</p>
+              <TagsManager language={savedSettings.language} />
             </div>
           )}
         </main>

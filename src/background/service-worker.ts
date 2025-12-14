@@ -12,6 +12,7 @@ interface TimerState {
   sessionType: 'work' | 'shortBreak' | 'longBreak';
   completedPomodoros: number;
   currentSessionId?: string; // Track current session being recorded
+  selectedTags?: string[]; // Track tags for current session
 }
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -72,7 +73,11 @@ function updateBadge() {
 async function handleTimerComplete(state: TimerState) {
   const isWorkSession = state.sessionType === 'work';
   
-  console.log('⏰ Timer completed! Session type:', state.sessionType);
+  console.log('⏰ Timer completed!', { 
+    sessionType: state.sessionType,
+    tags: state.selectedTags,
+    tagCount: state.selectedTags?.length || 0
+  });
   
   // Complete the current session record
   if (state.currentSessionId) {
@@ -81,7 +86,11 @@ async function handleTimerComplete(state: TimerState) {
       completed: true,
       interrupted: false,
     });
-    console.log('✅ Session completed and recorded:', state.currentSessionId);
+    console.log('✅ Session completed and recorded:', { 
+      sessionId: state.currentSessionId,
+      tags: state.selectedTags,
+      tagCount: state.selectedTags?.length || 0
+    });
   }
   
   // Check if notifications are enabled
@@ -184,16 +193,38 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 // Listen for messages from popup to start/stop session recording
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === 'startSession') {
-    handleStartSession(message.data).then(() => {
-      sendResponse({ success: true });
-    });
+    try {
+      console.log('🍅 [Service Worker] Received startSession message:', { 
+        sessionType: message.data?.sessionType,
+        tags: message.data?.tags,
+        tagCount: message.data?.tags?.length || 0 
+      });
+      handleStartSession(message.data).then(() => {
+        console.log('✅ [Service Worker] startSession handler completed');
+        sendResponse({ success: true });
+      }).catch(error => {
+        console.error('❌ [Service Worker] Error in handleStartSession:', error);
+        sendResponse({ success: false, error });
+      });
+    } catch (error) {
+      console.error('❌ [Service Worker] Error processing startSession:', error);
+      sendResponse({ success: false, error });
+    }
     return true; // Keep channel open for async response
   }
   
   if (message.action === 'interruptSession') {
-    handleInterruptSession().then(() => {
-      sendResponse({ success: true });
-    });
+    try {
+      handleInterruptSession().then(() => {
+        sendResponse({ success: true });
+      }).catch(error => {
+        console.error('❌ [Service Worker] Error in handleInterruptSession:', error);
+        sendResponse({ success: false, error });
+      });
+    } catch (error) {
+      console.error('❌ [Service Worker] Error processing interruptSession:', error);
+      sendResponse({ success: false, error });
+    }
     return true;
   }
 });
@@ -202,6 +233,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 async function handleStartSession(data: {
   sessionType: 'work' | 'shortBreak' | 'longBreak';
   endTime: number;
+  tags?: string[];
 }) {
   const timerMode = await getStoredTimerMode();
   const sessionId = generateSessionId();
@@ -218,17 +250,27 @@ async function handleStartSession(data: {
     duration,
     completed: false,
     interrupted: false,
+    tags: data.tags || [], // Store tags with session
   };
+  
+  console.log('📝 [Service Worker] Creating session record:', { 
+    sessionId,
+    type: data.sessionType,
+    tags: session.tags ?? [],
+    tagCount: (session.tags ?? []).length,
+    duration
+  });
   
   await saveSession(session);
   
-  // Store session ID in timer state
+  // Store session ID and tags in timer state
   chrome.storage.local.get(['timerState'], (result) => {
     const state = result.timerState as TimerState;
     chrome.storage.local.set({
       timerState: {
         ...state,
         currentSessionId: sessionId,
+        selectedTags: data.tags || [],
       },
     });
   });

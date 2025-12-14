@@ -2,7 +2,12 @@ import { useState, useEffect } from 'react';
 import { getTranslation, getStoredLanguage, type Language } from '../utils/i18n';
 import { getStoredTheme, applyTheme, watchSystemTheme } from '../utils/theme';
 import { getActiveTimerDurations, type TimerDurations } from '../utils/timerModes';
+import { getUserTags } from '../utils/tags';
+import type { SessionTag } from '../types/settings';
+import { TagsSelector } from '../components/TagsSelector';
 import '../styles/icons.css';
+import '../popup/styles.css';
+import '../styles/tags.css';
 
 type TimerState = 'idle' | 'running' | 'paused';
 type SessionType = 'work' | 'shortBreak' | 'longBreak';
@@ -13,6 +18,7 @@ interface StoredTimerState {
   endTime: number | null;
   sessionType: SessionType;
   completedPomodoros: number;
+  selectedTags?: string[]; // Tag IDs for current session
 }
 
 function App() {
@@ -23,6 +29,8 @@ function App() {
   const [language, setLanguage] = useState<Language>('en');
   const [menuOpen, setMenuOpen] = useState(false);
   const [resetClicked, setResetClicked] = useState(false);
+  const [availableTags, setAvailableTags] = useState<SessionTag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // Load state from storage on mount
   useEffect(() => {
@@ -32,6 +40,12 @@ function App() {
     // Load theme
     getStoredTheme().then((theme) => {
       applyTheme(theme);
+    });
+    
+    // Load available tags
+    getUserTags().then(tags => {
+      console.log('🏷️ [Popup] Loaded available tags:', { count: tags.length, tags: tags.map(t => t.name) });
+      setAvailableTags(tags);
     });
     
     // Watch for system theme changes
@@ -45,6 +59,7 @@ function App() {
         const state = result.timerState as StoredTimerState;
         setSessionType(state.sessionType);
         setCompletedPomodoros(state.completedPomodoros);
+        setSelectedTags(state.selectedTags || []);
         
         if (state.isRunning && state.endTime) {
           const remaining = Math.max(0, Math.ceil((state.endTime - Date.now()) / 1000));
@@ -73,6 +88,7 @@ function App() {
       if (changes.timerState) {
         const newState = changes.timerState.newValue as StoredTimerState;
         setSessionType(newState.sessionType);
+        setSelectedTags(newState.selectedTags || []);
         setCompletedPomodoros(newState.completedPomodoros);
         
         if (newState.isRunning && newState.endTime) {
@@ -165,6 +181,13 @@ function App() {
   const handleStart = () => {
     const endTime = Date.now() + (timeLeft * 1000);
     
+    console.log('🍅 [Popup] Starting session with tags:', { 
+      sessionType, 
+      selectedTags, 
+      tagCount: selectedTags.length,
+      duration: timeLeft 
+    });
+    
     chrome.storage.local.set({
       timerState: {
         isRunning: true,
@@ -172,6 +195,7 @@ function App() {
         endTime: endTime,
         sessionType: sessionType,
         completedPomodoros: completedPomodoros,
+        selectedTags: selectedTags,
       }
     });
     
@@ -181,6 +205,7 @@ function App() {
       data: {
         sessionType: sessionType,
         endTime: endTime,
+        tags: selectedTags,
       }
     });
     
@@ -266,6 +291,32 @@ function App() {
     }, 2000);
     
     return () => clearTimeout(timeout);
+  };
+
+  const toggleTag = (tagId: string) => {
+    setSelectedTags(prev => {
+      const newTags = prev.includes(tagId)
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId];
+      console.log('🏷️ [Popup] Tag toggled:', { tagId, newTags, action: prev.includes(tagId) ? 'removed' : 'added' });
+      return newTags;
+    });
+    
+    // Update storage if timer is not running
+    if (timerState === 'idle' || timerState === 'paused') {
+      chrome.storage.local.get(['timerState'], (result) => {
+        if (result.timerState) {
+          chrome.storage.local.set({
+            timerState: {
+              ...result.timerState,
+              selectedTags: selectedTags.includes(tagId)
+                ? selectedTags.filter(id => id !== tagId)
+                : [...selectedTags, tagId],
+            }
+          });
+        }
+      });
+    }
   };
 
   const formatTime = (seconds: number): string => {
@@ -396,6 +447,17 @@ function App() {
             />
           ))}
         </div>
+
+        {/* Tags Section - Only visible when timer is idle */}
+        {timerState === 'idle' && (
+          <TagsSelector
+            availableTags={availableTags}
+            selectedTags={selectedTags}
+            onToggleTag={toggleTag}
+            language={language}
+            disabled={false}
+          />
+        )}
       </main>
 
       <footer className="footer">

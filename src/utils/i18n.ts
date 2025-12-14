@@ -237,6 +237,10 @@ const translations: Translations = {
     en: 'Charts',
     fr: 'Graphiques',
   },
+  'stats.tabs.tags': {
+    en: 'Tags',
+    fr: 'Tags',
+  },
   'stats.today': {
     en: 'Today',
     fr: 'Aujourd\'hui',
@@ -249,6 +253,41 @@ const translations: Translations = {
     en: 'This Month',
     fr: 'Ce mois',
   },
+
+  // Tags (v0.5.0+)
+  'tags.title': {
+    en: 'Tags',
+    fr: 'Tags',
+  },
+  'tags.description': {
+    en: 'Organize your sessions with custom tags',
+    fr: 'Organisez vos sessions avec des tags personnalisés',
+  },
+  'tags.addNew': {
+    en: 'Add Tag',
+    fr: 'Ajouter un tag',
+  },
+  'tags.tagName': {
+    en: 'Tag Name',
+    fr: 'Nom du tag',
+  },
+  'tags.tagColor': {
+    en: 'Color',
+    fr: 'Couleur',
+  },
+  'tags.delete': {
+    en: 'Delete',
+    fr: 'Supprimer',
+  },
+  'tags.selectTags': {
+    en: 'Select tags for this session',
+    fr: 'Sélectionnez les tags pour cette session',
+  },
+  'tags.noTags': {
+    en: 'No tags yet. Create one in settings!',
+    fr: 'Aucun tag pour le moment. Créez-en un dans les paramètres !',
+  },
+
   'stats.sessions': {
     en: 'Sessions',
     fr: 'Sessions',
