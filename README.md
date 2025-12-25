@@ -2,7 +2,7 @@
 
 > An elegant and powerful Chrome Pomodoro extension to improve your focus and productivity
 
-![Version](https://img.shields.io/badge/version-0.6.0-red.svg)
+![Version](https://img.shields.io/badge/version-0.6.1-red.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)

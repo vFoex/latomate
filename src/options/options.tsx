@@ -5,7 +5,7 @@ import { Theme, getStoredTheme, setStoredTheme, applyTheme, watchSystemTheme } f
 import { TimerMode, TimerDurations, getStoredTimerMode, setStoredTimerMode, getStoredCustomDurations, setStoredCustomDurations, TIMER_PRESETS } from '../utils/timerModes';
 import PageLayout from '../components/PageLayout';
 import FeedbackSection from '../components/FeedbackSection';
-import AuthButton from '../components/AuthButton';
+// import AuthButton from '../components/AuthButton';
 import { TagsManager } from '../components/TagsManager';
 import './options.css';
 
@@ -235,7 +235,8 @@ function OptionsPage() {
               </div>
 
               {/* Cloud Sync / Auth */}
-              <AuthButton language={savedSettings.language} />
+              {/* TODO: Fix Google Auth issue before re-enabling */}
+              {/* <AuthButton language={savedSettings.language} /> */}
 
               {/* Feedback Section */}
               <FeedbackSection language={savedSettings.language} />
